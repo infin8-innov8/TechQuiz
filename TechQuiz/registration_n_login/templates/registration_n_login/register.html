@@ -1,0 +1,979 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TechQuiz Registration - TIC Club</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: #0a0e27;
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            touch-action: manipulation;
+        }
+
+        /* Background Elements */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(0, 245, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 245, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .bg-glow {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            max-width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(0, 245, 255, 0.08) 0%, transparent 70%);
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* Main Container */
+        .register-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 1rem;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1a2e 100%);
+            position: relative;
+            z-index: 3;
+        }
+
+        @media (min-width: 768px) {
+            .register-container {
+                padding: 2rem 1rem;
+                align-items: center;
+            }
+        }
+
+        /* Registration Card - Mobile First */
+        .register-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.2rem;
+            width: 100%;
+            max-width: 500px;
+            box-shadow:
+                0 10px 30px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(0, 245, 255, 0.1);
+            position: relative;
+            z-index: 10;
+            margin-top: 60px;
+            transition: transform 0.3s ease;
+        }
+
+        @media (min-width: 768px) {
+            .register-card {
+                padding: 2rem;
+                margin-top: 0;
+                backdrop-filter: blur(20px);
+            }
+        }
+
+        /* Logo Container */
+        .logo-container {
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: #0a0e27;
+            padding: 0;
+            box-shadow:
+                0 0 20px rgba(0, 245, 255, 0.5),
+                inset 0 0 15px rgba(0, 245, 255, 0.2);
+            border: 2px solid #00f5ff;
+            overflow: hidden;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (min-width: 768px) {
+            .logo-container {
+                width: 180px;
+                height: 180px;
+                top: -90px;
+            }
+        }
+
+        .logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            filter: brightness(1.1);
+            transform: scale(1.1);
+            /* Zoom slightly to ensure edge-to-edge fit */
+        }
+
+        /* Header */
+        .register-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-top: 110px;
+            /* Increased to clear the floating logo */
+        }
+
+        .register-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00f5ff 0%, #00d4ff 50%, #0099ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.3;
+            margin-bottom: 0.3rem;
+        }
+
+        @media (min-width: 768px) {
+            .register-logo {
+                font-size: 1.8rem;
+            }
+        }
+
+        .animate-creativity {
+            background: linear-gradient(135deg,
+                    #ff0000, #ff7f00, #ffff00, #00ff00,
+                    #0000ff, #4b0082, #9400d3, #ff0000);
+            background-size: 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientAnim 3s ease infinite;
+            display: inline-block;
+            font-weight: 900;
+        }
+
+        @keyframes gradientAnim {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .register-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+            font-weight: 400;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        @media (min-width: 768px) {
+            .register-subtitle {
+                font-size: 1rem;
+            }
+        }
+
+        /* Form Styles - Mobile Optimized */
+        .form-row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-bottom: 0.8rem;
+        }
+
+        @media (min-width: 768px) {
+            .form-row {
+                flex-direction: row;
+                gap: 1rem;
+                margin-bottom: 1rem;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+            width: 100%;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.4rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .form-label .required {
+            color: #ff4444;
+            margin-left: 2px;
+        }
+
+        /* Compact Input Fields for Mobile */
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 0.8rem 0.9rem;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1.5px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        /* Remove duplicate dropdown icons */
+        .form-select {
+            background-image: none;
+            padding-right: 2.5rem;
+            position: relative;
+        }
+
+        /* Custom dropdown arrow */
+        .select-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        /* Ensure dropdown options are visible */
+        select option {
+            background-color: #0a0e27;
+            color: #ffffff;
+        }
+
+        .select-wrapper::after {
+            content: '\f078';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.7);
+            pointer-events: none;
+            font-size: 0.9rem;
+            z-index: 5;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #00f5ff;
+            box-shadow:
+                0 0 0 2px rgba(0, 245, 255, 0.15);
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+            opacity: 1;
+            font-size: 0.9rem;
+        }
+
+        /* Phone input specific */
+        .phone-input {
+            padding-left: 3.5rem !important;
+        }
+
+        .phone-prefix {
+            position: absolute;
+            left: 0.9rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .phone-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        /* Member Sections */
+        .member-section {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1.2rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .member-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, #00f5ff, #0099ff);
+        }
+
+        .member-header {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .member-badge {
+            background: linear-gradient(135deg, #00f5ff 0%, #0099ff 100%);
+            color: #0a0e27;
+            padding: 0.2rem 0.6rem;
+            border-radius: 15px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(0, 245, 255, 0.3);
+        }
+
+        /* Submit Button */
+        .btn-primary {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #00f5ff 0%, #0099ff 100%);
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-size: 1rem;
+            font-weight: 800;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            position: relative;
+            overflow: hidden;
+            margin-top: 0.5rem;
+            box-shadow: 0 4px 15px rgba(0, 245, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow:
+                0 10px 25px rgba(0, 245, 255, 0.5),
+                0 0 20px rgba(0, 245, 255, 0.2);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-1px);
+        }
+
+        /* Messages */
+        .success-message,
+        .error-message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.2rem;
+            font-size: 0.9rem;
+            text-align: center;
+            animation: slideDown 0.4s ease-out;
+            border: 1px solid transparent;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success-message {
+            background: rgba(34, 197, 94, 0.15);
+            border-color: rgba(34, 197, 94, 0.3);
+            color: #4ade80;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ff6b6b;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .footer strong {
+            color: #00f5ff;
+            font-weight: 600;
+        }
+
+        /* Input Hints */
+        .input-hint {
+            display: block;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.75rem;
+            margin-top: 0.3rem;
+            line-height: 1.3;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(0, 245, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #00f5ff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Validation States */
+        .valid-input {
+            border-color: #4ade80 !important;
+        }
+
+        .invalid-input {
+            border-color: #ff6b6b !important;
+        }
+
+        /* Mobile-specific optimizations */
+        @media (max-width: 480px) {
+            .register-card {
+                padding: 1rem;
+                margin-top: 50px;
+            }
+
+            .form-input,
+            .form-select {
+                padding: 0.7rem 0.8rem;
+                font-size: 0.9rem;
+            }
+
+            .member-section {
+                padding: 1rem;
+            }
+
+            .btn-primary {
+                padding: 0.9rem;
+                font-size: 0.95rem;
+            }
+        }
+
+        /* Prevent zoom on input focus in iOS */
+        @media screen and (-webkit-min-device-pixel-ratio:0) {
+
+            select,
+            textarea,
+            input {
+                font-size: 16px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Background Elements -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+
+    <!-- Main Registration Container -->
+    <div class="register-container">
+        <div class="register-card">
+            <!-- Logo -->
+            <div class="logo-container">
+                <img src="{% static 'register/images/tic_logo.png' %}" alt="TIC Logo" class="logo-img">
+            </div>
+
+            <!-- Header -->
+            <div class="register-header">
+                <div class="register-logo">TECH INNOVATION AND <span class="animate-creativity">CREATIVITY</span> CLUB
+                </div>
+                <div class="register-subtitle">TechQuiz Competition Registration</div>
+            </div>
+
+            <!-- Messages -->
+            <div id="successMessage" class="success-message hidden"></div>
+            {% if form.non_field_errors %}
+            <div id="errorMessage" class="error-message">
+                {% for error in form.non_field_errors %}
+                {{ error }}
+                {% endfor %}
+            </div>
+            {% else %}
+            <div id="errorMessage" class="error-message hidden"></div>
+            {% endif %}
+
+            <!-- Form -->
+            <form id="teamForm" method="POST" action="{% url 'register' %}">
+                {% csrf_token %}
+
+                <!-- Team Name -->
+                <div class="form-group">
+                    <label class="form-label">Team Name <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="teamName" name="team_name"
+                        placeholder="e.g., Code Warriors" maxlength="30" required>
+                    <span class="input-hint">3-30 characters, alphanumeric and spaces only</span>
+                </div>
+
+                <!-- Member 1 (Primary) -->
+                <div class="member-section">
+                    <div class="member-header">
+                        <span class="member-badge">Primary</span>
+                        Member 1
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Full Name <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="member1-name" name="primary_member_name"
+                            placeholder="e.g., Rohan Sharma" maxlength="50" required>
+                        <span class="input-hint">Only letters and spaces, 2-50 characters</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email <span class="required">*</span></label>
+                        <input type="email" class="form-input" id="member1-email" name="primary_member_email"
+                            placeholder="rohan.sharma@gmail.com" required>
+                        <span class="input-hint">Must be a valid @gmail.com address</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Phone Number <span class="required">*</span></label>
+                        <div class="phone-wrapper">
+                            <span class="phone-prefix">+91</span>
+                            <input type="tel" class="form-input phone-input" id="member1-phone"
+                                name="primary_member_phone" placeholder="0000 00 0000" pattern="[0-9]{10}"
+                                maxlength="10" required>
+                        </div>
+                        <span class="input-hint">10-digit Indian mobile number</span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Department <span class="required">*</span></label>
+                            <div class="select-wrapper">
+                                <select class="form-select" id="member1-dept" name="primary_member_dept" required>
+                                    <option value="" disabled selected>Select Department</option>
+                                    <option value="CS">Computer Engineering</option>
+                                    <option value="AIDS">Artificial Intelligence and Data Science</option>
+                                    <option value="MECH">Mechanical Engineering</option>
+                                    <option value="CIVIL">Civil Engineering</option>
+                                    <option value="CSDS">Computer Science and Engineering (DS)</option>
+                                    <option value="IT">Information Technology</option>
+                                    <option value="OTHER">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Year <span class="required">*</span></label>
+                            <div class="select-wrapper">
+                                <select class="form-select" id="member1-year" name="primary_member_year" required>
+                                    <option value="" disabled selected>Select Year</option>
+                                    <option value="FE">First Year (FE)</option>
+                                    <option value="SE">Second Year (SE)</option>
+                                    <option value="TE">Third Year (TE)</option>
+                                    <option value="BE">Final Year (BE)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Member 2 -->
+                <div class="member-section">
+                    <div class="member-header">Member 2</div>
+
+                    <div class="form-group">
+                        <label class="form-label">Full Name <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="member2-name" name="supporting_member_name"
+                            placeholder="e.g., Priya Patel" maxlength="50" required>
+                        <span class="input-hint">Only letters and spaces, 2-50 characters</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email <span class="required">*</span></label>
+                        <input type="email" class="form-input" id="member2-email" name="supporting_member_email"
+                            placeholder="priya.patel@gmail.com" required>
+                        <span class="input-hint">Must be a valid @gmail.com address</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Phone Number <span class="required">*</span></label>
+                        <div class="phone-wrapper">
+                            <span class="phone-prefix">+91</span>
+                            <input type="tel" class="form-input phone-input" id="member2-phone"
+                                name="supporting_member_phone" placeholder="0000 00 0000" pattern="[0-9]{10}"
+                                maxlength="10" required>
+                        </div>
+                        <span class="input-hint">10-digit Indian mobile number</span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Department</label>
+                            <div class="select-wrapper">
+                                <select class="form-select" id="member2-dept" name="supporting_member_dept">
+                                    <option value="" disabled selected>Select Department</option>
+                                    <option value="CS">Computer Engineering</option>
+                                    <option value="AIDS">Artificial Intelligence and Data Science</option>
+                                    <option value="MECH">Mechanical Engineering</option>
+                                    <option value="CIVIL">Civil Engineering</option>
+                                    <option value="CSDS">Computer Science and Engineering (DS)</option>
+                                    <option value="IT">Information Technology</option>
+                                    <option value="OTHER">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Year</label>
+                            <div class="select-wrapper">
+                                <select class="form-select" id="member2-year" name="supporting_member_year">
+                                    <option value="" disabled selected>Select Year</option>
+                                    <option value="FE">First Year (FE)</option>
+                                    <option value="SE">Second Year (SE)</option>
+                                    <option value="TE">Third Year (TE)</option>
+                                    <option value="BE">Final Year (BE)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-group">
+                    <button type="submit" class="btn-primary" id="submitBtn">
+                        Register Team
+                    </button>
+                </div>
+
+                <!-- Footer -->
+                <div class="footer">
+                    <div>@Developed by <strong>TIC Club</strong></div>
+                    <div>Department of Technology</div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Helper Functions
+        function toTitleCase(str) {
+            return str.replace(/\w\S*/g, (txt) => {
+                return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+            });
+        }
+
+        function validateEmail(email) {
+            const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+            return gmailRegex.test(email);
+        }
+
+        function validateName(name) {
+            const nameRegex = /^[a-zA-Z\s]{2,50}$/;
+            return nameRegex.test(name.trim());
+        }
+
+        function validateTeamName(teamName) {
+            const teamRegex = /^[a-zA-Z0-9\s]{3,30}$/;
+            return teamRegex.test(teamName.trim());
+        }
+
+        function validatePhone(phone) {
+            const phoneRegex = /^[6-9]\d{9}$/;
+            return phoneRegex.test(phone);
+        }
+
+        // Show/Hide Messages
+        function showSuccess(message) {
+            const successEl = document.getElementById('successMessage');
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.classList.add('hidden');
+            successEl.textContent = message;
+            successEl.classList.remove('hidden');
+            setTimeout(() => successEl.classList.add('hidden'), 5000);
+        }
+
+        function showError(message) {
+            const successEl = document.getElementById('successMessage');
+            const errorEl = document.getElementById('errorMessage');
+            successEl.classList.add('hidden');
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
+            // Scroll to error message
+            errorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Real-time validation
+        function setupValidation(inputId, validationFn, errorMessage) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+
+            input.addEventListener('blur', function () {
+                if (this.value.trim()) {
+                    if (validationFn(this.value)) {
+                        this.classList.add('valid-input');
+                        this.classList.remove('invalid-input');
+                    } else {
+                        this.classList.add('invalid-input');
+                        this.classList.remove('valid-input');
+                        showError(errorMessage);
+                    }
+                } else {
+                    this.classList.remove('valid-input', 'invalid-input');
+                }
+            });
+
+            // Clear validation on focus
+            input.addEventListener('focus', function () {
+                this.classList.remove('valid-input', 'invalid-input');
+            });
+        }
+
+        // Auto-titleize name inputs
+        document.addEventListener('DOMContentLoaded', () => {
+            // Setup validation for all fields
+            setupValidation('teamName', validateTeamName, 'Team name: 3-30 characters, alphanumeric and spaces only');
+            setupValidation('member1-name', validateName, 'Name: 2-50 characters, letters and spaces only');
+            setupValidation('member2-name', validateName, 'Name: 2-50 characters, letters and spaces only');
+
+            // Email validation
+            const emailInputs = ['member1-email', 'member2-email'];
+            emailInputs.forEach(id => {
+                const input = document.getElementById(id);
+                input.addEventListener('blur', function () {
+                    if (this.value.trim() && !validateEmail(this.value)) {
+                        this.classList.add('invalid-input');
+                        showError('Email must be a valid @gmail.com address');
+                    }
+                });
+            });
+
+            // Phone validation
+            const phoneInputs = ['member1-phone', 'member2-phone'];
+            phoneInputs.forEach(id => {
+                const input = document.getElementById(id);
+                input.addEventListener('input', function () {
+                    // Allow only numbers
+                    this.value = this.value.replace(/\D/g, '');
+                    // Limit to 10 digits
+                    if (this.value.length > 10) {
+                        this.value = this.value.slice(0, 10);
+                    }
+                });
+
+                input.addEventListener('blur', function () {
+                    if (this.value.trim() && !validatePhone(this.value)) {
+                        this.classList.add('invalid-input');
+                        showError('Phone: 10-digit Indian mobile number starting with 6-9');
+                    } else if (this.value.trim()) {
+                        this.classList.add('valid-input');
+                        this.classList.remove('invalid-input');
+                    }
+                });
+            });
+
+            // Auto-fill Member 2 dept/year based on Member 1
+            const member1Dept = document.getElementById('member1-dept');
+            const member1Year = document.getElementById('member1-year');
+            const member2Dept = document.getElementById('member2-dept');
+            const member2Year = document.getElementById('member2-year');
+
+            function updateMember2Fields() {
+                if (member1Dept.value && member2Dept.value === "") {
+                    member2Dept.value = member1Dept.value;
+                }
+                if (member1Year.value && member2Year.value === "") {
+                    member2Year.value = member1Year.value;
+                }
+            }
+
+            if (member1Dept && member2Dept) {
+                member1Dept.addEventListener('change', updateMember2Fields);
+                member1Year.addEventListener('change', updateMember2Fields);
+            }
+
+            // Auto-titleize names on blur
+            const nameInputs = ['member1-name', 'member2-name', 'teamName'];
+            nameInputs.forEach(id => {
+                const input = document.getElementById(id);
+                if (input) {
+                    input.addEventListener('blur', function (e) {
+                        if (this.value.trim()) {
+                            this.value = toTitleCase(this.value);
+                        }
+                    });
+                }
+            });
+
+            // Prevent form submission on Enter key press except for submit button
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && e.target.tagName !== 'BUTTON' && e.target.type !== 'submit') {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // Form Submission
+        document.getElementById('teamForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Disable submit button and show loading
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading"></span> Processing...';
+
+            // Get form values
+            const teamName = document.getElementById('teamName').value.trim();
+            const member1Name = document.getElementById('member1-name').value.trim();
+            const member1Email = document.getElementById('member1-email').value.trim();
+            const member1Phone = document.getElementById('member1-phone').value.trim();
+            const member1Dept = document.getElementById('member1-dept').value;
+            const member1Year = document.getElementById('member1-year').value;
+            const member2Name = document.getElementById('member2-name').value.trim();
+            const member2Email = document.getElementById('member2-email').value.trim();
+            const member2Phone = document.getElementById('member2-phone').value.trim();
+
+            // Validation
+            let isValid = true;
+            let errorMessage = '';
+
+            // Team Name Validation
+            if (!validateTeamName(teamName)) {
+                errorMessage = "Team Name: 3-30 characters, alphanumeric and spaces only";
+                isValid = false;
+            }
+
+            // Member 1 Validation
+            else if (!validateName(member1Name)) {
+                errorMessage = "Primary Member Name: 2-50 characters, letters and spaces only";
+                isValid = false;
+            }
+            else if (!validateEmail(member1Email)) {
+                errorMessage = "Primary Member Email must be a valid @gmail.com address";
+                isValid = false;
+            }
+            else if (!validatePhone(member1Phone)) {
+                errorMessage = "Primary Member Phone: 10-digit Indian mobile number starting with 6-9";
+                isValid = false;
+            }
+            else if (!member1Dept) {
+                errorMessage = "Please select a Department for Member 1";
+                isValid = false;
+            }
+            else if (!member1Year) {
+                errorMessage = "Please select a Year for Member 1";
+                isValid = false;
+            }
+
+            // Member 2 Validation
+            else if (!validateName(member2Name)) {
+                errorMessage = "Secondary Member Name: 2-50 characters, letters and spaces only";
+                isValid = false;
+            }
+            else if (!validateEmail(member2Email)) {
+                errorMessage = "Secondary Member Email must be a valid @gmail.com address";
+                isValid = false;
+            }
+            else if (!validatePhone(member2Phone)) {
+                errorMessage = "Secondary Member Phone: 10-digit Indian mobile number starting with 6-9";
+                isValid = false;
+            }
+
+            // Duplicate Check
+            else if (member1Email.toLowerCase() === member2Email.toLowerCase()) {
+                errorMessage = "Primary and Secondary members cannot have the same email address";
+                isValid = false;
+            }
+            else if (member1Phone === member2Phone) {
+                errorMessage = "Primary and Secondary members cannot have the same phone number";
+                isValid = false;
+            }
+            else if (member1Name.toLowerCase() === member2Name.toLowerCase()) {
+                errorMessage = "Primary and Secondary members cannot have the same name";
+                isValid = false;
+            }
+
+            if (!isValid) {
+                showError(errorMessage);
+                // Re-enable submit button
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Register Team';
+                return;
+            }
+
+            // If validation passes, submit the form
+            setTimeout(() => {
+                this.submit();
+            }, 500);
+        });
+    </script>
+</body>
+
+</html>
