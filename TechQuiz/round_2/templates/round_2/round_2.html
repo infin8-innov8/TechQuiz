@@ -386,7 +386,7 @@
             };
 
             try {
-                const response = await fetch('/api/submit_round/', {
+                const response = await fetch('/api/quiz/submit_round/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -398,7 +398,6 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    alert("Submission successful! Redirecting...");
                     window.location.href = "/waiting-room/";
                 } else {
                     alert(`Submission Error: ${data.error}`);
