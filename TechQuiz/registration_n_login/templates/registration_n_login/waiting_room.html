@@ -329,7 +329,12 @@
                     }
                 } else if (data.round_status === 'ONGOING' && data.active_round === 2) {
                     if (!data.is_submitted) {
-                        startRedirectSequence(2);
+                        if (data.is_qualified) {
+                            startRedirectSequence(2);
+                        } else {
+                            // Disqualified - Redirect to Eliminated Page
+                            window.location.href = `/eliminated/?score=${data.last_score}&rank=${data.rank}&total=${data.total_score}&round=1&team=${teamId || ''}`;
+                        }
                     } else {
                         console.log("Round 2 ongoing but already submitted.");
                     }

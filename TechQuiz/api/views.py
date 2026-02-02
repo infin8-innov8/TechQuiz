@@ -110,24 +110,58 @@ def get_game_status(request):
         is_submitted = False
         team_id = request.session.get('user_id')
         
+        is_qualified = True
+        rank = None
+        current_score = 0
+        total_score = 100 # Assuming 10 questions x 10 points
+        
         if team_id:
             try:
                 team = Team.objects.get(id=team_id)
-                if active_round == 1:
-                    is_submitted = Round1Score.objects.filter(team=team).exists()
-                elif active_round == 2:
+                
+                # Check Qualification for Round 2
+                if active_round == 2:
                     is_submitted = Round2Score.objects.filter(team=team).exists()
+                    # Logic: Top 20 from Round 1
+                    # Get all Round 1 scores sorted by score (desc) and time (asc)
+                    r1_scores = Round1Score.objects.all().order_by('-score', 'completion_time')
+                    
+                    # Convert to list to find rank
+                    ranked_teams = list(r1_scores)
+                    
+                    try:
+                        # Find the score object for this team
+                        my_score_obj = next((s for s in ranked_teams if s.team == team), None)
+                        if my_score_obj:
+                            rank = ranked_teams.index(my_score_obj) + 1
+                            current_score = my_score_obj.score
+                            # Qualified if rank <= 20
+                            is_qualified = rank <= 20
+                        else:
+                            is_qualified = False # Didn't play Round 1?
+                    except Exception as e:
+                        print(f"Error calculating rank: {e}")
+                        is_qualified = False
+
+                elif active_round == 1:
+                    is_submitted = Round1Score.objects.filter(team=team).exists()
                 elif active_round == 3:
-                    is_submitted = Round3Score.objects.filter(team=team).exists()
+                     is_submitted = Round3Score.objects.filter(team=team).exists()
+                     
             except Team.DoesNotExist:
                 pass
                 
         return JsonResponse({
             'active_round': active_round,
             'round_status': status,
-            'is_submitted': is_submitted
+            'is_submitted': is_submitted,
+            'is_qualified': is_qualified,
+            'rank': rank,
+            'last_score': current_score,
+            'total_score': total_score
         })
-    except:
+    except Exception as e:
+        print(f"Game Status Error: {e}")
         return JsonResponse({
             'active_round': 0,
             'round_status': 'WAITING',
