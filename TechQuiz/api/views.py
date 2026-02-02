@@ -115,22 +115,20 @@ def get_game_status(request):
         current_score = 0
         total_score = 100 # Assuming 10 questions x 10 points
         
+        team_name = ""
         if team_id:
             try:
                 team = Team.objects.get(id=team_id)
+                team_name = team.team_name
                 
                 # Check Qualification for Round 2
                 if active_round == 2:
                     is_submitted = Round2Score.objects.filter(team=team).exists()
                     # Logic: Top 20 from Round 1
-                    # Get all Round 1 scores sorted by score (desc) and time (asc)
                     r1_scores = Round1Score.objects.all().order_by('-score', 'completion_time')
-                    
-                    # Convert to list to find rank
                     ranked_teams = list(r1_scores)
                     
                     try:
-                        # Find the score object for this team
                         my_score_obj = next((s for s in ranked_teams if s.team == team), None)
                         if my_score_obj:
                             rank = ranked_teams.index(my_score_obj) + 1
@@ -138,9 +136,31 @@ def get_game_status(request):
                             # Qualified if rank <= 20
                             is_qualified = rank <= 20
                         else:
-                            is_qualified = False # Didn't play Round 1?
+                            is_qualified = False 
                     except Exception as e:
-                        print(f"Error calculating rank: {e}")
+                        print(f"Error calculating rank R2: {e}")
+                        is_qualified = False
+
+                # Check Qualification for Round 3
+                elif active_round == 3:
+                    # Logic: Top 10 from Round 2
+                    is_submitted = False # Round 3 is live, never "submitted" in the traditional sense
+                    
+                    r2_scores = Round2Score.objects.all().order_by('-score', 'completion_time')
+                    ranked_teams_r2 = list(r2_scores)
+                    
+                    try:
+                         my_score_obj = next((s for s in ranked_teams_r2 if s.team == team), None)
+                         if my_score_obj:
+                             rank = ranked_teams_r2.index(my_score_obj) + 1
+                             current_score = my_score_obj.score
+                             # Qualified if rank <= 10
+                             is_qualified = rank <= 10
+                         else:
+                             # If they didn't play Round 2, they can't be in Round 3
+                             is_qualified = False
+                    except Exception as e:
+                        print(f"Error calculating rank R3: {e}")
                         is_qualified = False
 
                 elif active_round == 1:
@@ -158,12 +178,135 @@ def get_game_status(request):
             'is_qualified': is_qualified,
             'rank': rank,
             'last_score': current_score,
-            'total_score': total_score
+            'total_score': total_score,
+            'team_name': team_name
         })
     except Exception as e:
         print(f"Game Status Error: {e}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+def get_leaderboard(request):
+    try:
+        from instructor.models import GameState, Round1Score, Round2Score
+        
+        # Get active round
+        game_state = GameState.objects.first()
+        if not game_state:
+            return JsonResponse({'error': 'Game State not initialized'}, status=400)
+            
+        active_round = game_state.active_round
+        
+        leaderboard_data = []
+        
+        if active_round == 1:
+            # Rank R1: Score Desc, Time Asc
+            scores = Round1Score.objects.select_related('team').order_by('-score', 'completion_time')
+            for idx, s in enumerate(scores, 1):
+                leaderboard_data.append({
+                    'rank': idx,
+                    'team_name': s.team.team_name,
+                    'score': s.score,
+                    'timestamp': s.completion_time.strftime('%H:%M:%S.%f')[:-3] if s.completion_time else "N/A"
+                })
+                
+        elif active_round == 2:
+            # Rank R2: Score Desc, Time Asc
+            scores = Round2Score.objects.select_related('team').order_by('-score', 'completion_time')
+            for idx, s in enumerate(scores, 1):
+                leaderboard_data.append({
+                    'rank': idx,
+                    'team_name': s.team.team_name,
+                    'score': s.score,
+                    'timestamp': s.completion_time.strftime('%H:%M:%S.%f')[:-3] if s.completion_time else "N/A"
+                })
+        
+        elif active_round == 3:
+            from instructor.models import Round3Question, BerserkLog
+            # Find active question
+            active_q = Round3Question.objects.filter(is_active=True).first()
+            
+            if active_q:
+                # Get valid logs for this question, sorted by time (first finger first)
+                logs = BerserkLog.objects.filter(
+                    question=active_q, 
+                    is_illegal=False
+                ).select_related('team').order_by('timestamp')
+                
+                for idx, log in enumerate(logs, 1):
+                    leaderboard_data.append({
+                        'rank': idx,
+                        'team_name': log.team.team_name,
+                        'score': 'LOGGED', # No score yet, just order
+                        'timestamp': log.timestamp.strftime('%H:%M:%S.%f')[:-3]
+                    })
+            else:
+                # If no active question, maybe show overall Round 3 scores?
+                # For now, return empty or last question's logs?
+                pass
+
         return JsonResponse({
-            'active_round': 0,
-            'round_status': 'WAITING',
-            'is_submitted': False
+            'active_round': active_round,
+            'round_status': game_state.round_status,
+            'leaderboard': leaderboard_data[:10]  # Top 10 only
         })
+
+    except Exception as e:
+        print(f"Leaderboard Error: {e}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+@csrf_exempt
+def berserk_click(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+        
+    try:
+        data = json.loads(request.body)
+        team_id = request.session.get('team_id')
+        
+        if not team_id:
+             return JsonResponse({'error': 'Not logged in'}, status=401)
+             
+        from instructor.models import GameState, Round3Question, BerserkLog, Round3Score, Team
+        
+        game_state = GameState.objects.first()
+        if not game_state or game_state.active_round != 3:
+            return JsonResponse({'error': 'Round 3 not active'}, status=400)
+            
+        team = Team.objects.get(id=team_id)
+        
+        # Check for active question
+        active_q = Round3Question.objects.filter(is_active=True).first()
+        
+        if active_q:
+            # VALID HIT
+            # Log it
+            BerserkLog.objects.create(
+                team=team,
+                question=active_q,
+                is_illegal=False
+            )
+            return JsonResponse({'status': 'logged', 'message': 'Berserk Recorded!'})
+            
+        else:
+            # ILLEGAL HIT
+            BerserkLog.objects.create(
+                team=team,
+                question=None, # No active question
+                is_illegal=True
+            )
+            
+            # Check penalty (3rd illegal hit = -10)
+            illegal_count = BerserkLog.objects.filter(team=team, is_illegal=True).count()
+            
+            if illegal_count % 3 == 0:
+                # Penalty
+                score_obj, created = Round3Score.objects.get_or_create(team=team)
+                score_obj.score -= 10
+                score_obj.save()
+                return JsonResponse({'status': 'penalty', 'message': 'ILLEGAL HIT! -10 Points Penalty!'})
+            
+            return JsonResponse({'status': 'illegal', 'message': f'Illegal Hit! Warning {illegal_count % 3}/3'})
+
+    except Exception as e:
+        print(f"Berserk Error: {e}")
+        return JsonResponse({'error': str(e)}, status=500)

@@ -23,7 +23,9 @@ urlpatterns = [
     path('instructor/', include('instructor.urls')),
     path('round-1/', include('round_1.urls')),
     path('round-2/', include('round_2.urls')),
+    path('round-3/', TemplateView.as_view(template_name='registration_n_login/round_3.html'), name='round_3'),
     path('eliminated/', TemplateView.as_view(template_name='registration_n_login/eliminated.html'), name='eliminated'),
+    path('leaderboard/', TemplateView.as_view(template_name='registration_n_login/leaderboard.html'), name='leaderboard'),
     path('api/', include('api.urls')),
     path('', include('registration_n_login.urls')),
 ]

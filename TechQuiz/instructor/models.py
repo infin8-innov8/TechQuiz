@@ -54,3 +54,20 @@ class Round3Score(models.Model):
 
     def __str__(self):
         return f"{self.team.team_name} - {self.score}"
+
+class Round3Question(models.Model):
+    question_text = models.CharField(max_length=255)
+    sequence_order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f"Q{self.sequence_order}: {self.question_text} ({'Active' if self.is_active else 'Locked'})"
+
+class BerserkLog(models.Model):
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='berserk_logs')
+    question = models.ForeignKey(Round3Question, on_delete=models.CASCADE, related_name='logs')
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_illegal = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f"{self.team.team_name} - {'ILLEGAL' if self.is_illegal else 'VALID'} - {self.timestamp.strftime('%H:%M:%S.%f')}"

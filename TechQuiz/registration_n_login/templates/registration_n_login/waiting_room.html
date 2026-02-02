@@ -333,10 +333,18 @@
                             startRedirectSequence(2);
                         } else {
                             // Disqualified - Redirect to Eliminated Page
-                            window.location.href = `/eliminated/?score=${data.last_score}&rank=${data.rank}&total=${data.total_score}&round=1&team=${teamId || ''}`;
+                            window.location.href = `/eliminated/?score=${data.last_score}&rank=${data.rank}&total=${data.total_score}&round=1&team=${encodeURIComponent(data.team_name || '')}`;
                         }
                     } else {
                         console.log("Round 2 ongoing but already submitted.");
+                    }
+                } else if (data.round_status === 'ONGOING' && data.active_round === 3) {
+                    if (data.is_qualified) {
+                        // Direct redirect for Round 3 (Berserk Mode)
+                        window.location.href = '/round-3/';
+                    } else {
+                        // Disqualified from R2 -> R3
+                        window.location.href = `/eliminated/?score=${data.last_score}&rank=${data.rank}&total=${data.total_score}&round=2&team=${encodeURIComponent(data.team_name || '')}`;
                     }
                 }
                 // Future expansion for Round 2, 3...

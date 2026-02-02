@@ -226,7 +226,7 @@
         .robot-icon {
             width: 140px;
             height: 140px;
-            margin: 0 auto 2rem;
+            margin: 1.5rem auto 2rem;
             position: relative;
             animation: floatRobot 4s ease-in-out infinite;
         }
@@ -434,6 +434,7 @@
         }
 
         .results-subtitle {
+            font-family: 'Orbitron', sans-serif;
             color: var(--text-secondary);
             font-size: 1.2rem;
             letter-spacing: 2px;
@@ -442,13 +443,15 @@
         }
 
         .results-message {
+            font-family: 'Orbitron', sans-serif;
             color: rgba(255, 255, 255, 0.8);
-            font-size: 1rem;
+            font-size: 0.9rem;
             line-height: 1.6;
             margin-bottom: 2.5rem;
             max-width: 400px;
             margin-left: auto;
             margin-right: auto;
+            letter-spacing: 1px;
         }
 
         /* Stats Section */
@@ -539,19 +542,22 @@
 
         /* Footer */
         .copyright-footer {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
             text-align: center;
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
             color: rgba(255, 255, 255, 0.6);
             font-size: 0.75rem;
             font-weight: 500;
             letter-spacing: 0.5px;
+            z-index: 100;
         }
 
         .copyright-footer strong {
             color: var(--cyan);
-            font-weight: 600;
+            font-weight: 200;
             margin: 0 2px;
         }
 
@@ -699,12 +705,12 @@
             <div class="results-stats" id="resultsStats">
                 <!-- Stats will be injected by JavaScript -->
             </div>
-
-            <!-- Footer -->
-            <div class="copyright-footer">
-                @developed by <strong>TIC</strong> | Department of Technology
-            </div>
         </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="copyright-footer">
+        @developed by <strong>TIC</strong> | Department of Technology
     </div>
 
     <script>
@@ -773,7 +779,7 @@
             if (rank) {
                 statsHTML += `
                      <div class="stat-item">
-                        <span class="stat-label">Your Rank</span>
+                        <span class="stat-label">YOUR RANK</span>
                         <span class="stat-value">#${rank}</span>
                     </div>
                 `;
@@ -784,15 +790,6 @@
                     <div class="stat-item">
                         <span class="stat-label">YOUR SCORE</span>
                         <span class="stat-value">${score} / ${total}</span>
-                    </div>
-                `;
-            }
-
-            if (!statsHTML) {
-                statsHTML = `
-                    <div class="stat-item">
-                        <span class="stat-label">Status</span>
-                        <span class="stat-value">Completed</span>
                     </div>
                 `;
             }
