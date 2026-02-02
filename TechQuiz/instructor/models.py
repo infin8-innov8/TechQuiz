@@ -15,6 +15,7 @@ class GameState(models.Model):
 
     active_round = models.IntegerField(choices=ROUND_CHOICES, default=1)
     round_status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='WAITING')
+    current_round3_question = models.ForeignKey('Round3Question', on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
@@ -59,6 +60,7 @@ class Round3Question(models.Model):
     question_text = models.CharField(max_length=255)
     sequence_order = models.IntegerField(default=0)
     is_active = models.BooleanField(default=False)
+    activated_at = models.DateTimeField(null=True, blank=True)
     
     def __str__(self):
         return f"Q{self.sequence_order}: {self.question_text} ({'Active' if self.is_active else 'Locked'})"

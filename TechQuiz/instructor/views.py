@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
+from django.utils import timezone
 from .forms import GameStateForm
-from .models import GameState
+from .models import GameState, Round3Score, Round3Question
 from registration_n_login.models import Team
 
 def is_admin(user):
@@ -23,9 +24,9 @@ def instructor_dashboard(request):
     for team in qualified_teams_r2:
         Round3Score.objects.get_or_create(team=team)
     
-    questions = Round3Question.objects.all().order_by('sequence_order')
+
     scores = Round3Score.objects.filter(team__in=qualified_teams_r2).order_by('-score')
-    active_question = Round3Question.objects.filter(is_active=True).first()
+
 
     if request.method == 'POST':
         if 'active_round' in request.POST: # Game State Update
@@ -47,9 +48,80 @@ def instructor_dashboard(request):
                 messages.success(request, f"Activated Question: {q.question_text}")
                 
             elif action == 'deactivate_all':
-                Round3Question.objects.update(is_active=False)
-                messages.info(request, "All questions deactivated.")
+                # LOCK ALL: Lock, but don't reset "current"
+                current = game_state.current_round3_question
+                if current:
+                    current.is_active = False
+                    current.save()
+                    messages.info(request, "Question Locked.")
+                else:
+                    Round3Question.objects.update(is_active=False)
+                    messages.info(request, "System Locked.")
+
+            elif action == 'toggle_activation': # New Action: Unlock/Lock
+                current = game_state.current_round3_question
+                if current:
+                    if current.is_active:
+                        # Lock it
+                        current.is_active = False
+                        current.save()
+                        messages.info(request, f"Locked Q{current.sequence_order}")
+                    else:
+                        # Unlock it (Start Berserk)
+                        current.is_active = True
+                        current.activated_at = timezone.now()
+                        current.save()
+                        messages.success(request, f"UNLOCKED BERSERK for Q{current.sequence_order}!")
+                else:
+                    messages.warning(request, "No question selected to unlock.")
+
+            elif action == 'next_question':
+                current = game_state.current_round3_question
                 
+                # Try to find existing next question
+                if current:
+                    next_q = Round3Question.objects.filter(sequence_order__gt=current.sequence_order).order_by('sequence_order').first()
+                else:
+                    next_q = Round3Question.objects.order_by('sequence_order').first()
+
+                # If no existing next question, create one (Arbitrary Number support)
+                if not next_q:
+                    new_order = (current.sequence_order + 1) if current else 1
+                    next_q = Round3Question.objects.create(
+                        sequence_order=new_order,
+                        question_text=f"Physical Question {new_order}"
+                    )
+
+                if next_q:
+                    # Lock the previous one and the new one for safety
+                    if current:
+                        current.is_active = False
+                        current.save()
+                    
+                    game_state.current_round3_question = next_q
+                    game_state.save()
+                    next_q.is_active = False # Default to locked
+                    next_q.save()
+                    messages.success(request, f"Selected Next Question: Q{next_q.sequence_order}")
+
+            elif action == 'prev_question':
+                current = game_state.current_round3_question
+                if current:
+                    # Lock current
+                    current.is_active = False
+                    current.save()
+
+                    prev_q = Round3Question.objects.filter(sequence_order__lt=current.sequence_order).order_by('-sequence_order').first()
+                    
+                    if prev_q:
+                        game_state.current_round3_question = prev_q
+                        game_state.save()
+                        messages.success(request, f"Selected Previous Question: Q{prev_q.sequence_order}")
+                    else:
+                        messages.warning(request, "Start of questions reached.")
+                else:
+                    messages.info(request, "No question selected.")
+            
             elif action == 'update_score':
                 team_id = request.POST.get('team_id')
                 try:
@@ -71,9 +143,9 @@ def instructor_dashboard(request):
     context = {
         'form': form,
         'game_state': game_state,
-        'questions': questions,
+
         'scores': scores,
-        'active_question': active_question,
+        'active_question': game_state.current_round3_question, # Current Selected
         'teams': qualified_teams_r2
     }
             

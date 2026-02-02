@@ -73,7 +73,7 @@ def submit_round(request):
                         continue
                         
                     if q_id in correct_answers and correct_answers[q_id] == selected:
-                        score += 10 # 10 Points per correct answer
+                        score += 20 # 20 Points per correct answer
                         
                 # Update Round 2 Score
                 Round2Score.objects.update_or_create(
@@ -113,7 +113,9 @@ def get_game_status(request):
         is_qualified = True
         rank = None
         current_score = 0
-        total_score = 100 # Assuming 10 questions x 10 points
+        
+        # total_score assumption: R1=100 (10x10), R2=200 (10x20)
+        total_score = 200 if active_round == 2 else 100
         
         team_name = ""
         if team_id:
@@ -222,32 +224,36 @@ def get_leaderboard(request):
         
         elif active_round == 3:
             from instructor.models import Round3Question, BerserkLog
-            # Find active question
-            active_q = Round3Question.objects.filter(is_active=True).first()
+            # Use the currently selected question from GameState
+            current_q = game_state.current_round3_question
             
-            if active_q:
-                # Get valid logs for this question, sorted by time (first finger first)
+            if current_q:
+                # Get logs for this specific question, sorted by time
                 logs = BerserkLog.objects.filter(
-                    question=active_q, 
+                    question=current_q, 
                     is_illegal=False
                 ).select_related('team').order_by('timestamp')
                 
-                for idx, log in enumerate(logs, 1):
-                    leaderboard_data.append({
-                        'rank': idx,
-                        'team_name': log.team.team_name,
-                        'score': 'LOGGED', # No score yet, just order
-                        'timestamp': log.timestamp.strftime('%H:%M:%S.%f')[:-3]
-                    })
-            else:
-                # If no active question, maybe show overall Round 3 scores?
-                # For now, return empty or last question's logs?
-                pass
+                seen_teams = set()
+                rank = 1
+                for log in logs:
+                    if log.team_id not in seen_teams:
+                        leaderboard_data.append({
+                            'rank': rank,
+                            'team_name': log.team.team_name,
+                            'score': 'LOGGED',
+                            'timestamp': log.timestamp.strftime('%H:%M:%S.%f')[:-3]
+                        })
+                        seen_teams.add(log.team_id)
+                        rank += 1
 
         return JsonResponse({
             'active_round': active_round,
             'round_status': game_state.round_status,
-            'leaderboard': leaderboard_data[:10]  # Top 10 only
+            'leaderboard': leaderboard_data[:10],
+            'active_question_text': current_q.question_text if active_round == 3 and current_q else None,
+            'active_question_number': current_q.sequence_order if active_round == 3 and current_q else None,
+            'is_unlocked': current_q.is_active if active_round == 3 and current_q else False
         })
 
     except Exception as e:
@@ -261,7 +267,7 @@ def berserk_click(request):
         
     try:
         data = json.loads(request.body)
-        team_id = request.session.get('team_id')
+        team_id = request.session.get('user_id')
         
         if not team_id:
              return JsonResponse({'error': 'Not logged in'}, status=401)
@@ -274,38 +280,61 @@ def berserk_click(request):
             
         team = Team.objects.get(id=team_id)
         
-        # Check for active question
-        active_q = Round3Question.objects.filter(is_active=True).first()
+        # Get currently selected question
+        current_q = game_state.current_round3_question
         
-        if active_q:
-            # VALID HIT
-            # Log it
-            BerserkLog.objects.create(
-                team=team,
-                question=active_q,
-                is_illegal=False
-            )
-            return JsonResponse({'status': 'logged', 'message': 'Berserk Recorded!'})
+        if not current_q:
+            return JsonResponse({'error': 'No question selected'}, status=400)
+
+        # 1. First, check if a legal hit already exists for this team/question
+        # A user can appear only once in the leaderboard (first legal hit counts)
+        if BerserkLog.objects.filter(team=team, question=current_q, is_illegal=False).exists():
+            return JsonResponse({'status': 'logged', 'message': 'Already logged!'}, status=200)
+
+        # 2. Create the log
+        log = BerserkLog.objects.create(
+            team=team,
+            question=current_q
+        )
+        
+        # Determine legality: Hit must be >= activated_at
+        is_illegal = False
+        if not current_q.is_active or not current_q.activated_at:
+             is_illegal = True
+        elif log.timestamp < current_q.activated_at:
+             is_illegal = True
+             
+        if is_illegal:
+            log.is_illegal = True
+            log.save()
             
-        else:
-            # ILLEGAL HIT
-            BerserkLog.objects.create(
-                team=team,
-                question=None, # No active question
+            # Check for cumulative penalty (3 strikes for this question? or overall?)
+            # User previously asked for "3 illegal hits = -10 penalty".
+            # Let's count illegal hits for THIS question for THIS team.
+            illegal_count = BerserkLog.objects.filter(
+                team=team, 
+                question=current_q, 
                 is_illegal=True
-            )
-            
-            # Check penalty (3rd illegal hit = -10)
-            illegal_count = BerserkLog.objects.filter(team=team, is_illegal=True).count()
+            ).count()
             
             if illegal_count % 3 == 0:
-                # Penalty
-                score_obj, created = Round3Score.objects.get_or_create(team=team)
-                score_obj.score -= 10
-                score_obj.save()
-                return JsonResponse({'status': 'penalty', 'message': 'ILLEGAL HIT! -10 Points Penalty!'})
+                r3_score, _ = Round3Score.objects.get_or_create(team=team)
+                r3_score.score -= 10
+                r3_score.save()
+                return JsonResponse({
+                    'status': 'illegal', 
+                    'message': f'PENALTY! {illegal_count} Illegal Hits. -10 Points.',
+                    'illegal_count': illegal_count
+                })
+                
+            return JsonResponse({
+                'status': 'illegal', 
+                'message': 'Illegal Hit (False Start)!',
+                'illegal_count': illegal_count
+            })
             
-            return JsonResponse({'status': 'illegal', 'message': f'Illegal Hit! Warning {illegal_count % 3}/3'})
+        return JsonResponse({'status': 'logged', 'message': 'Berserk Recorded!'})
+
 
     except Exception as e:
         print(f"Berserk Error: {e}")

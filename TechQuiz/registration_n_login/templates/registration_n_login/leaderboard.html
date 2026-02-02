@@ -765,12 +765,27 @@
                 const roundIndicator = document.getElementById('activeRoundIndicator');
 
                 // Update Active Round Text
-                roundIndicator.innerText = `ROUND ${data.active_round} - ${data.round_status || 'WAITING'}`;
+                let statusText = `ROUND ${data.active_round} - ${data.round_status || 'WAITING'}`;
+
+                // For Round 3: Append Active Question & Status
+                if (data.active_round === 3 && data.active_question_number) {
+                    const statusBadge = data.is_unlocked
+                        ? '<span style="color: #00e676; font-weight: 800; animation: pulse 1.5s infinite;"> [ LIVE ]</span>'
+                        : '<span style="color: #ff1744; font-weight: 800;"> [ LOCKED ]</span>';
+
+                    statusText += `<br><span style="font-size: 1.1rem; color: var(--cyan); display: block; margin-top: 8px;">Question ${data.active_question_number}${statusBadge}</span>`;
+                }
+
+                roundIndicator.innerHTML = statusText;
 
                 if (!data.leaderboard || data.leaderboard.length === 0) {
+                    let emptyMsg = `No valid submissions yet for Round ${data.active_round}`;
+                    if (data.active_round === 3 && !data.active_question_number) {
+                        emptyMsg = "Waiting for Next Question...";
+                    }
                     leaderboardBody.innerHTML = `
                         <div class="empty-state">
-                            <p>No valid submissions yet for Round ${data.active_round}</p>
+                            <p>${emptyMsg}</p>
                         </div>
                     `;
                     return;
