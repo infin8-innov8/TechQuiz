@@ -1,0 +1,938 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TechQuiz Competition Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --cyan: #00f5ff;
+            --cyan-light: #4df7ff;
+            --cyan-dark: #00a3cc;
+            --bg-primary: #0a0e27;
+            --bg-secondary: #1a1a2e;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --error-color: #ff4d4d;
+            --success-color: #00ffaa;
+            --shadow-glow: 0 0 30px rgba(0, 245, 255, 0.4);
+            --shadow-glow-strong: 0 0 40px rgba(0, 245, 255, 0.6);
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            touch-action: manipulation;
+        }
+
+        /* Background Elements */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(0, 245, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 245, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .bg-glow {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(0, 245, 255, 0.15) 0%, transparent 70%);
+            z-index: 2;
+            pointer-events: none;
+            animation: pulseGlow 4s ease-in-out infinite;
+        }
+
+        @keyframes pulseGlow {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            50% {
+                opacity: 0.7;
+                transform: translate(-50%, -50%) scale(1.15);
+            }
+        }
+
+        /* Main Container */
+        .register-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            position: relative;
+            z-index: 3;
+        }
+
+        /* BIGGER Logo Container */
+        .logo-container {
+            position: absolute;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: var(--bg-primary);
+            padding: 10px;
+            box-shadow:
+                0 0 40px rgba(0, 245, 255, 0.7),
+                inset 0 0 30px rgba(0, 245, 255, 0.3),
+                0 0 0 4px rgba(0, 245, 255, 0.2);
+            border: 4px solid var(--cyan);
+            overflow: hidden;
+            z-index: 20;
+            animation: floatLogo 6s ease-in-out infinite;
+        }
+
+        @keyframes floatLogo {
+
+            0%,
+            100% {
+                transform: translateX(-50%) translateY(0);
+            }
+
+            50% {
+                transform: translateX(-50%) translateY(-10px);
+            }
+        }
+
+        .logo-container::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            background: conic-gradient(from 0deg, var(--cyan), #0088ff, #0099ff, var(--cyan));
+            border-radius: 50%;
+            z-index: -1;
+            animation: rotateBorder 4s linear infinite;
+            filter: blur(10px);
+            opacity: 0.5;
+        }
+
+        @keyframes rotateBorder {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            filter: brightness(1.2) contrast(1.1);
+            transition: transform 0.5s ease;
+        }
+
+        .logo-container:hover .logo-img {
+            transform: scale(1.05);
+        }
+
+        /* Login Card */
+        .register-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 3.5rem 3rem;
+            width: 100%;
+            max-width: 500px;
+            box-shadow:
+                0 25px 70px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(0, 245, 255, 0.15);
+            position: relative;
+            z-index: 10;
+            margin-top: 100px;
+            transition: all 0.4s ease;
+            animation: slideUp 0.7s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .register-card:hover {
+            transform: translateY(-8px);
+            box-shadow:
+                0 35px 90px rgba(0, 245, 255, 0.25),
+                0 0 0 1px rgba(0, 245, 255, 0.3);
+        }
+
+        .register-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--cyan), #0088ff, #0099ff, var(--cyan));
+            background-size: 300% 100%;
+            animation: borderFlow 3s linear infinite;
+            border-radius: 20px 20px 0 0;
+        }
+
+        @keyframes borderFlow {
+            0% {
+                background-position: 0% 0%;
+            }
+
+            100% {
+                background-position: 300% 0%;
+            }
+        }
+
+        /* Header */
+        .register-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-top: 40px;
+        }
+
+        .register-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--cyan) 0%, #00d4ff 50%, #0099ff 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.3;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 20px rgba(0, 245, 255, 0.3);
+        }
+
+        .animate-creativity {
+            background: linear-gradient(135deg,
+                    #ff0000, #ff7f00, #ffff00, #00ff00,
+                    #0000ff, #4b0082, #9400d3, #ff0000);
+            background-size: 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientAnim 3s ease infinite;
+            display: inline-block;
+            font-weight: 900;
+        }
+
+        @keyframes gradientAnim {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .register-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.2rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 0.5rem;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 2rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.75rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1.2rem 1.5rem;
+            background: rgba(255, 255, 255, 0.07);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--cyan);
+            box-shadow:
+                0 0 0 4px rgba(0, 245, 255, 0.2),
+                0 0 25px rgba(0, 245, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+            opacity: 1;
+            font-size: 1rem;
+        }
+
+        /* Error Message */
+        .error-message {
+            background: rgba(255, 77, 77, 0.15);
+            border: 1px solid rgba(255, 77, 77, 0.3);
+            color: var(--error-color);
+            padding: 1.2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            font-size: 1rem;
+            text-align: left;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            animation: slideDown 0.4s ease-out;
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-message i {
+            margin-top: 0.1rem;
+            flex-shrink: 0;
+            font-size: 1.2rem;
+        }
+
+        .success-message {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #4ade80;
+            padding: 1.2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            font-size: 1rem;
+            text-align: center;
+            animation: slideDown 0.4s ease-out;
+            backdrop-filter: blur(10px);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Submit Button */
+        .btn-primary {
+            width: 100%;
+            padding: 1.4rem;
+            background: linear-gradient(135deg, var(--cyan) 0%, #0099ff 100%);
+            border: none;
+            border-radius: 12px;
+            color: #000;
+            font-size: 1.2rem;
+            font-weight: 800;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+            margin-top: 0.5rem;
+            box-shadow: 0 8px 25px rgba(0, 245, 255, 0.4);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg,
+                    transparent,
+                    rgba(255, 255, 255, 0.4),
+                    transparent);
+            transition: 0.7s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow:
+                0 20px 50px rgba(0, 245, 255, 0.6),
+                0 0 40px rgba(0, 245, 255, 0.3);
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:active {
+            transform: translateY(-3px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Copyright Footer */
+        .copyright-footer {
+            text-align: center;
+            position: absolute;
+            bottom: 2rem;
+            width: 100%;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.75rem;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            animation: fadeIn 0.8s ease-out 1s both;
+            border-top: none;
+            padding-top: 0;
+            margin-top: 0;
+            z-index: 10;
+        }
+
+        .copyright-footer strong {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin: 0 2px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--cyan);
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Floating Elements */
+        .floating-dot {
+            position: fixed;
+            width: 6px;
+            height: 6px;
+            background: var(--cyan);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 5;
+            box-shadow: 0 0 15px var(--cyan);
+            opacity: 0;
+        }
+
+        /* Tech Beam Effects */
+        .tech-beam {
+            position: fixed;
+            height: 100vh;
+            width: 2px;
+            background: linear-gradient(to bottom, transparent, var(--cyan), transparent);
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: 4;
+            animation: beamScan 8s linear infinite;
+        }
+
+        @keyframes beamScan {
+            0% {
+                transform: translateY(-100%);
+            }
+
+            100% {
+                transform: translateY(100%);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .logo-container {
+                width: 160px;
+                height: 160px;
+                top: -80px;
+            }
+
+            .register-card {
+                padding: 2.5rem 2rem;
+                margin-top: 90px;
+            }
+
+            .register-logo {
+                font-size: 1.7rem;
+            }
+
+            .register-subtitle {
+                font-size: 1.1rem;
+            }
+
+            .form-input {
+                padding: 1.1rem 1.3rem;
+                font-size: 1rem;
+            }
+
+            .btn-primary {
+                padding: 1.2rem;
+                font-size: 1.1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .register-container {
+                padding: 1.5rem 1rem;
+            }
+
+            .logo-container {
+                width: 140px;
+                height: 140px;
+                top: -70px;
+                padding: 8px;
+            }
+
+            .register-card {
+                padding: 2rem 1.5rem;
+                margin-top: 80px;
+                border-radius: 18px;
+            }
+
+            .register-logo {
+                font-size: 1.5rem;
+            }
+
+            .register-subtitle {
+                font-size: 1rem;
+                letter-spacing: 1px;
+            }
+
+            .form-input {
+                padding: 1rem 1.2rem;
+                font-size: 1rem;
+            }
+
+            .btn-primary {
+                padding: 1.1rem;
+                font-size: 1rem;
+            }
+
+            .copyright-footer {
+                font-size: 0.7rem;
+                bottom: 1.5rem;
+            }
+        }
+
+        /* Fix for iOS backdrop-filter */
+        @supports not (backdrop-filter: blur(25px)) {
+            .register-card {
+                background: rgba(15, 15, 35, 0.97);
+            }
+
+            .error-message,
+            .success-message {
+                background: rgba(255, 77, 77, 0.25);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Background Elements -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+
+    <!-- Tech Beams -->
+    <div class="tech-beam" style="left: 20%; animation-delay: 0s;"></div>
+    <div class="tech-beam" style="left: 50%; animation-delay: 2s;"></div>
+    <div class="tech-beam" style="left: 80%; animation-delay: 4s;"></div>
+
+    <!-- Floating Dots -->
+    <div class="floating-dot" id="dot1"></div>
+    <div class="floating-dot" id="dot2"></div>
+    <div class="floating-dot" id="dot3"></div>
+    <div class="floating-dot" id="dot4"></div>
+    <div class="floating-dot" id="dot5"></div>
+    <div class="floating-dot" id="dot6"></div>
+    <div class="floating-dot" id="dot7"></div>
+
+    <!-- Main Container -->
+    <div class="register-container">
+        <div class="register-card">
+            <!-- BIGGER Centered Logo -->
+            <div class="logo-container">
+                <img src="{% static 'registration_n_login/images/tic_logo.png' %}" alt="TIC Club Logo" class="logo-img">
+            </div>
+
+            <!-- Header -->
+            <div class="register-header">
+                <div class="register-logo">TECH INNOVATION AND <span class="animate-creativity">CREATIVITY</span> CLUB
+                </div>
+                <div class="register-subtitle">Team Login - TechQuiz Competition</div>
+            </div>
+
+            <!-- Messages -->
+            {% if success_message %}
+            <div id="successMessage" class="success-message">
+                <i class="fas fa-check-circle"></i> {{ success_message }}
+            </div>
+            {% endif %}
+
+            {% if message %}
+            <div id="errorMessage" class="error-message">
+                <i class="fas fa-exclamation-circle"></i> {{ message }}
+            </div>
+            {% endif %}
+
+            <!-- Login Form -->
+            <form method="POST" id="loginForm">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label class="form-label">Team Email</label>
+                    <input type="email" name="email" placeholder="Enter primary member's Gmail address" required
+                        class="form-input" id="emailInput" autocomplete="email" inputmode="email"
+                        value="{{ email|default:'' }}">
+                    <div style="margin-top: 0.5rem; color: rgba(255,255,255,0.5); font-size: 0.9rem;">
+                        Use the email registered during team signup
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary" id="submitBtn">
+                    <span id="btnText">VERIFY</span>
+                </button>
+            </form>
+
+        </div>
+        <div class="copyright-footer">
+            @developed by <strong>TIC</strong> | Department of Technology
+        </div>
+    </div>
+
+    <script>
+        // Initialize floating dots
+        function initFloatingDots() {
+            const dots = document.querySelectorAll('.floating-dot');
+            dots.forEach((dot, index) => {
+                // Random position
+                const left = Math.random() * 100;
+                const top = Math.random() * 100;
+
+                // Random size (bigger dots)
+                const size = 4 + Math.random() * 6;
+
+                // Random animation delay
+                const delay = Math.random() * 6;
+
+                // Random duration
+                const duration = 5 + Math.random() * 5;
+
+                // Set styles
+                dot.style.left = `${left}%`;
+                dot.style.top = `${top}%`;
+                dot.style.width = `${size}px`;
+                dot.style.height = `${size}px`;
+
+                // Random color variation
+                const hue = 180 + Math.random() * 40;
+                const saturation = 80 + Math.random() * 20;
+                dot.style.background = `hsl(${hue}, ${saturation}%, 60%)`;
+                dot.style.boxShadow = `0 0 ${size * 2}px hsl(${hue}, ${saturation}%, 60%)`;
+
+                // Set animation
+                dot.style.animation = `
+                    floatDot ${duration}s ease-in-out ${delay}s infinite,
+                    pulseDot ${duration * 0.5}s ease-in-out ${delay}s infinite
+                `;
+            });
+        }
+
+        // Add floating dot animation keyframes
+        function addDotAnimations() {
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes floatDot {
+                    0%, 100% {
+                        transform: translateY(0) translateX(0) rotate(0deg);
+                        opacity: 0;
+                    }
+                    10% {
+                        opacity: 0.8;
+                    }
+                    90% {
+                        opacity: 0.8;
+                    }
+                    100% {
+                        transform: translateY(-120vh) translateX(${Math.random() * 100 - 50}px) rotate(${Math.random() * 360}deg);
+                        opacity: 0;
+                    }
+                }
+                
+                @keyframes pulseDot {
+                    0%, 100% { opacity: 0.4; transform: scale(1); }
+                    50% { opacity: 1; transform: scale(1.2); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Form submission handler
+        function setupForm() {
+            const form = document.getElementById('loginForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const emailInput = document.getElementById('emailInput');
+
+            // Auto-focus on email input with delay
+            setTimeout(() => {
+                emailInput.focus();
+                emailInput.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    emailInput.style.transform = 'scale(1)';
+                }, 200);
+            }, 800);
+
+            form.addEventListener('submit', function (e) {
+                const email = emailInput.value.trim();
+
+                // Basic email validation
+                if (!email.includes('@gmail.com')) {
+                    e.preventDefault();
+                    showError('Please use a valid Gmail address (@gmail.com)');
+                    return;
+                }
+
+                // Show loading state with enhanced animation
+                submitBtn.disabled = true;
+                btnText.innerHTML = '<span class="loading"></span>Verifying...';
+                submitBtn.style.background = 'linear-gradient(135deg, #00a3cc, #0077cc)';
+
+                // Add pulsing effect
+                let pulseCount = 0;
+                const pulseInterval = setInterval(() => {
+                    submitBtn.style.boxShadow = `0 0 ${20 + pulseCount * 2}px rgba(0, 245, 255, 0.${5 + pulseCount})`;
+                    pulseCount++;
+                    if (pulseCount > 10) {
+                        clearInterval(pulseInterval);
+                    }
+                }, 100);
+
+                // Store email in localStorage for better UX
+                localStorage.setItem('techquiz_last_email', email);
+            });
+
+            // Clear error on input
+            emailInput.addEventListener('input', function () {
+                const errorMessage = document.getElementById('errorMessage');
+                if (errorMessage) {
+                    errorMessage.classList.add('hidden');
+                }
+
+                // Remove error styling
+                this.style.borderColor = '';
+                this.style.boxShadow = '';
+            });
+
+            // Load last used email if available
+            const lastEmail = localStorage.getItem('techquiz_last_email');
+            if (lastEmail && !emailInput.value) {
+                emailInput.value = lastEmail;
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            // Remove existing error messages
+            const existingError = document.getElementById('errorMessage');
+            if (existingError) {
+                existingError.remove();
+            }
+
+            // Create new error message
+            const form = document.getElementById('loginForm');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.id = 'errorMessage';
+            errorDiv.innerHTML = `
+                <i class="fas fa-exclamation-circle"></i>
+                <span>${message}</span>
+            `;
+
+            // Insert before form
+            form.parentNode.insertBefore(errorDiv, form);
+
+            // Add error styling to input
+            const emailInput = document.getElementById('emailInput');
+            emailInput.style.borderColor = 'var(--error-color)';
+            emailInput.style.boxShadow = '0 0 0 4px rgba(255, 77, 77, 0.2)';
+
+            // Scroll to error message
+            errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Re-enable submit button with reset styling
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            submitBtn.disabled = false;
+            btnText.textContent = 'VERIFY & LOGIN';
+            submitBtn.style.background = 'linear-gradient(135deg, var(--cyan) 0%, #0099ff 100%)';
+            submitBtn.style.boxShadow = '0 8px 25px rgba(0, 245, 255, 0.4)';
+        }
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', function () {
+            // Add dot animations
+            addDotAnimations();
+
+            // Initialize floating dots
+            initFloatingDots();
+
+            // Setup form handling
+            setupForm();
+
+            // Add card entrance animation
+            const card = document.querySelector('.register-card');
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(60px) scale(0.95)';
+
+            setTimeout(() => {
+                card.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0) scale(1)';
+            }, 300);
+
+            // Add logo entrance animation
+            const logo = document.querySelector('.logo-container');
+            logo.style.opacity = '0';
+            logo.style.transform = 'translateX(-50%) scale(0.7) rotate(-180deg)';
+
+            setTimeout(() => {
+                logo.style.transition = 'opacity 0.6s ease-out 0.4s, transform 0.6s ease-out 0.4s';
+                logo.style.opacity = '1';
+                logo.style.transform = 'translateX(-50%) scale(1) rotate(0deg)';
+            }, 300);
+
+            // Add tech beam animations
+            const beams = document.querySelectorAll('.tech-beam');
+            beams.forEach((beam, index) => {
+                beam.style.animationDelay = `${index * 2}s`;
+            });
+
+            // Auto-hide success message after 5 seconds
+            const successMessage = document.getElementById('successMessage');
+            if (successMessage && !successMessage.classList.contains('hidden')) {
+                setTimeout(() => {
+                    successMessage.style.opacity = '0';
+                    successMessage.style.transform = 'translateY(-10px) scale(0.95)';
+                    setTimeout(() => {
+                        successMessage.classList.add('hidden');
+                    }, 400);
+                }, 5000);
+            }
+
+            // Auto-hide error message after 8 seconds
+            const errorMessage = document.getElementById('errorMessage');
+            if (errorMessage && !errorMessage.classList.contains('hidden')) {
+                setTimeout(() => {
+                    errorMessage.style.opacity = '0';
+                    errorMessage.style.transform = 'translateY(-10px) scale(0.95)';
+                    setTimeout(() => {
+                        errorMessage.classList.add('hidden');
+                        const emailInput = document.getElementById('emailInput');
+                        if (emailInput) {
+                            emailInput.style.borderColor = '';
+                            emailInput.style.boxShadow = '';
+                        }
+                    }, 400);
+                }, 8000);
+            }
+        });
+    </script>
+</body>
+
+</html>

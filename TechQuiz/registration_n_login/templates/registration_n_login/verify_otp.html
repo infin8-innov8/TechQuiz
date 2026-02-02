@@ -1,0 +1,1080 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Verify OTP - TechQuiz Competition | TIC Club</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --cyan: #00f5ff;
+            --cyan-light: #4df7ff;
+            --cyan-dark: #00a3cc;
+            --bg-primary: #0a0e27;
+            --bg-secondary: #1a1a2e;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --error-color: #ff4d4d;
+            --success-color: #00ffaa;
+            --shadow-glow: 0 0 30px rgba(0, 245, 255, 0.4);
+            --shadow-glow-strong: 0 0 40px rgba(0, 245, 255, 0.6);
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            touch-action: manipulation;
+        }
+
+        /* Background Elements */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(0, 245, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 245, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .bg-glow {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(0, 245, 255, 0.15) 0%, transparent 70%);
+            z-index: 2;
+            pointer-events: none;
+            animation: pulseGlow 4s ease-in-out infinite;
+        }
+
+        @keyframes pulseGlow {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            50% {
+                opacity: 0.7;
+                transform: translate(-50%, -50%) scale(1.15);
+            }
+        }
+
+        /* Header Branding */
+        .header-branding {
+            position: fixed;
+            top: 25px;
+            left: 25px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .header-branding:hover {
+            transform: translateX(5px);
+        }
+
+        .logo-img {
+            height: 65px;
+            width: 65px;
+            border-radius: 50%;
+            border: 2px solid var(--cyan);
+            box-shadow: var(--shadow-glow);
+            object-fit: cover;
+            transition: all 0.3s ease;
+            padding: 2px;
+        }
+
+        .logo-img:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-glow-strong);
+            border-color: var(--cyan-light);
+        }
+
+        .handle {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--cyan);
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
+        }
+
+        /* Watermark */
+        .bg-watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12vw;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.02);
+            white-space: nowrap;
+            z-index: 1;
+            pointer-events: none;
+            user-select: none;
+            text-transform: uppercase;
+            letter-spacing: 2vw;
+        }
+
+        /* Main Container */
+        .main-container {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+            position: relative;
+            z-index: 10;
+            padding: 20px;
+        }
+
+        /* Card */
+        .card {
+            background: rgba(15, 15, 35, 0.9);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 3rem 2.5rem;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: var(--shadow-glow);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .card:hover {
+            box-shadow: 0 20px 60px rgba(0, 245, 255, 0.3);
+            border-color: rgba(0, 245, 255, 0.2);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--cyan), #0088ff, #0099ff, var(--cyan));
+            background-size: 200% 100%;
+            animation: borderFlow 3s linear infinite;
+        }
+
+        @keyframes borderFlow {
+            0% {
+                background-position: 0% 0%;
+            }
+
+            100% {
+                background-position: 200% 0%;
+            }
+        }
+
+        /* Card Header */
+        .card-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .card-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin: 0 0 0.5rem 0;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, var(--cyan), #0088ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+        }
+
+        .card-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        /* Error Message */
+        .error-message {
+            background: rgba(255, 77, 77, 0.15);
+            border: 1px solid rgba(255, 77, 77, 0.3);
+            color: var(--error-color);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+            text-align: left;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-message i {
+            margin-top: 0.1rem;
+            flex-shrink: 0;
+        }
+
+        /* OTP Container */
+        .otp-container {
+            display: flex;
+            justify-content: center;
+            gap: 0.8rem;
+            margin-bottom: 2rem;
+        }
+
+        .otp-input {
+            width: 55px;
+            height: 65px;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.07);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .otp-input:focus {
+            border-color: var(--cyan);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 0 3px rgba(0, 245, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .otp-input.filled {
+            border-color: var(--success-color);
+            background: rgba(0, 255, 170, 0.1);
+        }
+
+        .otp-input.error {
+            border-color: var(--error-color);
+            background: rgba(255, 77, 77, 0.1);
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        /* Email Info */
+        .email-info {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(0, 245, 255, 0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 245, 255, 0.2);
+        }
+
+        .email-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .email-value {
+            color: var(--cyan);
+            font-weight: 600;
+            font-size: 1rem;
+            word-break: break-all;
+        }
+
+        /* Submit Button */
+        .btn-primary {
+            width: 100%;
+            padding: 1.2rem;
+            background: linear-gradient(135deg, var(--cyan) 0%, #0099ff 100%);
+            border: none;
+            border-radius: 12px;
+            color: #000;
+            font-size: 1.1rem;
+            font-weight: 800;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 245, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 245, 255, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Resend OTP */
+        .resend-container {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .resend-link {
+            color: var(--cyan);
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+            margin-left: 5px;
+        }
+
+        .resend-link:hover {
+            color: var(--cyan-light);
+            text-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
+        }
+
+        .resend-link.disabled {
+            color: var(--text-secondary);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* Timer */
+        .timer {
+            color: var(--cyan);
+            font-weight: 700;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+        }
+
+        /* Footer */
+        .copyright-footer {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.75rem;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .copyright-footer strong {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin: 0 2px;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--cyan);
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Floating Elements */
+        .floating-dot {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: var(--cyan);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 5;
+            box-shadow: 0 0 10px var(--cyan);
+            opacity: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-branding {
+                top: 20px;
+                left: 20px;
+            }
+
+            .logo-img {
+                height: 55px;
+                width: 55px;
+            }
+
+            .handle {
+                font-size: 1.1rem;
+            }
+
+            .card {
+                padding: 2.5rem 2rem;
+            }
+
+            .card-title {
+                font-size: 1.8rem;
+            }
+
+            .card-subtitle {
+                font-size: 1rem;
+            }
+
+            .otp-input {
+                width: 50px;
+                height: 60px;
+                font-size: 1.8rem;
+            }
+
+            .otp-container {
+                gap: 0.6rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-branding {
+                top: 15px;
+                left: 15px;
+            }
+
+            .logo-img {
+                height: 50px;
+                width: 50px;
+            }
+
+            .handle {
+                font-size: 1rem;
+            }
+
+            .card {
+                padding: 2rem 1.5rem;
+            }
+
+            .card-title {
+                font-size: 1.6rem;
+            }
+
+            .card-subtitle {
+                font-size: 0.9rem;
+            }
+
+            .otp-input {
+                width: 45px;
+                height: 55px;
+                font-size: 1.6rem;
+            }
+
+            .otp-container {
+                gap: 0.5rem;
+            }
+
+            .email-value {
+                font-size: 0.9rem;
+            }
+
+            .btn-primary {
+                padding: 1rem;
+                font-size: 1rem;
+            }
+
+            .copyright-footer {
+                font-size: 0.7rem;
+                bottom: 15px;
+            }
+        }
+
+        /* Fix for iOS backdrop-filter */
+        @supports not (backdrop-filter: blur(25px)) {
+            .card {
+                background: rgba(15, 15, 35, 0.95);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Background Elements -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+    <div class="bg-watermark">TIC_CLUB</div>
+
+    <!-- Floating Dots -->
+    <div class="floating-dot" id="dot1"></div>
+    <div class="floating-dot" id="dot2"></div>
+    <div class="floating-dot" id="dot3"></div>
+    <div class="floating-dot" id="dot4"></div>
+    <div class="floating-dot" id="dot5"></div>
+
+    <!-- Header Branding -->
+    <div class="header-branding">
+        <img src="{% static 'registration_n_login/images/tic_logo.png' %}" alt="TIC Club Logo" class="logo-img">
+        <span class="handle">@TIC_Club</span>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <div class="card">
+            <!-- Card Header -->
+            <div class="card-header">
+                <h1 class="card-title">VERIFY OTP</h1>
+                <p class="card-subtitle">Enter the 6-digit code sent to your email</p>
+            </div>
+
+            <!-- Error Message -->
+            {% if message %}
+            <div class="error-message" id="errorMessage">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ message }}</span>
+            </div>
+            {% endif %}
+
+            <!-- Email Info -->
+            {% if email %}
+            <div class="email-info">
+                <div class="email-label">Code sent to:</div>
+                <div class="email-value">{{ email }}</div>
+            </div>
+            {% endif %}
+
+            <!-- OTP Form -->
+            <form method="POST" id="otpForm">
+                {% csrf_token %}
+
+                <!-- Hidden input for full OTP -->
+                <input type="hidden" name="otp" id="fullOtp" value="">
+
+                <!-- OTP Input Boxes -->
+                <div class="otp-container" id="otpContainer">
+                    <input type="text" class="otp-input" maxlength="1" data-index="0" inputmode="numeric"
+                        autocomplete="off">
+                    <input type="text" class="otp-input" maxlength="1" data-index="1" inputmode="numeric"
+                        autocomplete="off">
+                    <input type="text" class="otp-input" maxlength="1" data-index="2" inputmode="numeric"
+                        autocomplete="off">
+                    <input type="text" class="otp-input" maxlength="1" data-index="3" inputmode="numeric"
+                        autocomplete="off">
+                    <input type="text" class="otp-input" maxlength="1" data-index="4" inputmode="numeric"
+                        autocomplete="off">
+                    <input type="text" class="otp-input" maxlength="1" data-index="5" inputmode="numeric"
+                        autocomplete="off">
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn-primary" id="submitBtn">
+                    <span id="btnText">VERIFY & LOGIN</span>
+                </button>
+            </form>
+
+            <!-- Resend OTP -->
+            <div class="resend-container">
+                <span>Didn't receive code?</span>
+                <a href="#" class="resend-link" id="resendLink">Resend OTP</a>
+                <span id="timerText" class="timer" style="display: none;"> in <span id="timer">60</span>s</span>
+            </div>
+        </div>
+
+        <!-- Copyright Footer -->
+        <div class="copyright-footer">
+            @developed by <strong>TIC</strong> | Department of Technology
+        </div>
+    </div>
+
+    <script>
+        // OTP Handling Functions
+        class OTPHandler {
+            constructor() {
+                this.otpInputs = document.querySelectorAll('.otp-input');
+                this.fullOtpInput = document.getElementById('fullOtp');
+                this.form = document.getElementById('otpForm');
+                this.submitBtn = document.getElementById('submitBtn');
+                this.btnText = document.getElementById('btnText');
+                this.resendLink = document.getElementById('resendLink');
+                this.timerText = document.getElementById('timerText');
+                this.timerDisplay = document.getElementById('timer');
+                this.errorMessage = document.getElementById('errorMessage');
+                this.timer = null;
+                this.timeLeft = 60;
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.startTimer();
+                this.focusFirstInput();
+                this.setupFloatingDots();
+            }
+
+            setupEventListeners() {
+                // OTP input handling
+                this.otpInputs.forEach((input, index) => {
+                    input.addEventListener('input', (e) => this.handleInput(e, index));
+                    input.addEventListener('keydown', (e) => this.handleKeyDown(e, index));
+                    input.addEventListener('paste', (e) => this.handlePaste(e));
+                    input.addEventListener('focus', () => input.select());
+                });
+
+                // Form submission
+                this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+
+                // Resend OTP
+                this.resendLink.addEventListener('click', (e) => this.handleResend(e));
+
+                // Click outside to clear selection
+                document.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('otp-input')) {
+                        this.otpInputs.forEach(input => input.blur());
+                    }
+                });
+            }
+
+            handleInput(e, index) {
+                const input = e.target;
+                const value = input.value;
+
+                // Allow only digits
+                if (!/^\d*$/.test(value)) {
+                    input.value = '';
+                    return;
+                }
+
+                // If user enters a digit, move to next input
+                if (value.length === 1 && index < this.otpInputs.length - 1) {
+                    this.otpInputs[index + 1].focus();
+                }
+
+                // Update filled class
+                if (value.length === 1) {
+                    input.classList.add('filled');
+                    input.classList.remove('error');
+                } else {
+                    input.classList.remove('filled');
+                }
+
+                // Update hidden input
+                this.updateFullOTP();
+            }
+
+            handleKeyDown(e, index) {
+                const input = e.target;
+
+                // Handle backspace
+                if (e.key === 'Backspace') {
+                    if (input.value.length === 0 && index > 0) {
+                        // Move to previous input and clear it
+                        this.otpInputs[index - 1].value = '';
+                        this.otpInputs[index - 1].focus();
+                        this.otpInputs[index - 1].classList.remove('filled');
+                    } else if (input.value.length > 0) {
+                        // Clear current input
+                        input.value = '';
+                        input.classList.remove('filled');
+                    }
+                    this.updateFullOTP();
+                    e.preventDefault();
+                    return;
+                }
+
+                // Handle delete
+                if (e.key === 'Delete') {
+                    input.value = '';
+                    input.classList.remove('filled');
+                    this.updateFullOTP();
+                    e.preventDefault();
+                    return;
+                }
+
+                // Handle arrow keys
+                if (e.key === 'ArrowLeft' && index > 0) {
+                    this.otpInputs[index - 1].focus();
+                    e.preventDefault();
+                    return;
+                }
+
+                if (e.key === 'ArrowRight' && index < this.otpInputs.length - 1) {
+                    this.otpInputs[index + 1].focus();
+                    e.preventDefault();
+                    return;
+                }
+
+                // Handle home/end
+                if (e.key === 'Home') {
+                    this.otpInputs[0].focus();
+                    e.preventDefault();
+                    return;
+                }
+
+                if (e.key === 'End') {
+                    this.otpInputs[this.otpInputs.length - 1].focus();
+                    e.preventDefault();
+                    return;
+                }
+
+                // Allow only digits, backspace, delete, and arrow keys
+                if (!/^\d$/.test(e.key) &&
+                    !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'Tab'].includes(e.key)) {
+                    e.preventDefault();
+                }
+            }
+
+            handlePaste(e) {
+                e.preventDefault();
+                const pasteData = e.clipboardData.getData('text').trim();
+
+                // Extract only digits
+                const digits = pasteData.replace(/\D/g, '').slice(0, 6);
+
+                if (digits.length === 6) {
+                    // Fill all inputs with pasted digits
+                    this.otpInputs.forEach((input, index) => {
+                        input.value = digits[index] || '';
+                        if (digits[index]) {
+                            input.classList.add('filled');
+                            input.classList.remove('error');
+                        }
+                    });
+
+                    // Focus last input
+                    this.otpInputs[5].focus();
+                    this.updateFullOTP();
+                }
+            }
+
+            updateFullOTP() {
+                const otp = Array.from(this.otpInputs)
+                    .map(input => input.value)
+                    .join('');
+                this.fullOtpInput.value = otp;
+
+                // Auto-submit if all digits are filled
+                if (otp.length === 6) {
+                    setTimeout(() => {
+                        if (this.validateOTP()) {
+                            this.submitForm();
+                        }
+                    }, 300);
+                }
+            }
+
+            validateOTP() {
+                const otp = this.fullOtpInput.value;
+
+                if (otp.length !== 6) {
+                    this.showError('Please enter all 6 digits');
+                    return false;
+                }
+
+                if (!/^\d{6}$/.test(otp)) {
+                    this.showError('OTP must contain only digits');
+                    return false;
+                }
+
+                return true;
+            }
+
+            async submitForm() {
+                if (!this.validateOTP()) {
+                    return;
+                }
+
+                // Show loading state
+                this.submitBtn.disabled = true;
+                this.btnText.innerHTML = '<span class="loading"></span>Verifying...';
+
+                // Submit form after short delay
+                setTimeout(() => {
+                    this.form.submit();
+                }, 800);
+            }
+
+            handleSubmit(e) {
+                e.preventDefault();
+                this.submitForm();
+            }
+
+            handleResend(e) {
+                e.preventDefault();
+
+                if (this.resendLink.classList.contains('disabled')) {
+                    return;
+                }
+
+                // Disable resend link and start timer
+                this.resendLink.classList.add('disabled');
+                this.resendLink.textContent = 'Resend OTP';
+                this.timerText.style.display = 'inline';
+                this.timeLeft = 60;
+                this.startTimer();
+
+                // Show message
+                this.showMessage('New OTP sent to your email', 'success');
+
+                // Simulate API call
+                fetch(window.location.href, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: 'resend=true'
+                }).catch(error => {
+                    console.error('Error resending OTP:', error);
+                });
+            }
+
+            startTimer() {
+                if (this.timer) {
+                    clearInterval(this.timer);
+                }
+
+                this.timer = setInterval(() => {
+                    this.timeLeft--;
+                    this.timerDisplay.textContent = this.timeLeft;
+
+                    if (this.timeLeft <= 0) {
+                        clearInterval(this.timer);
+                        this.resendLink.classList.remove('disabled');
+                        this.timerText.style.display = 'none';
+                        this.timerDisplay.textContent = '60';
+                    }
+                }, 1000);
+            }
+
+            focusFirstInput() {
+                // Focus first empty input
+                const firstEmpty = Array.from(this.otpInputs).find(input => !input.value);
+                if (firstEmpty) {
+                    setTimeout(() => firstEmpty.focus(), 300);
+                } else {
+                    this.otpInputs[0].focus();
+                }
+            }
+
+            showError(message) {
+                // Clear existing error
+                if (this.errorMessage) {
+                    this.errorMessage.remove();
+                }
+
+                // Create new error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.id = 'errorMessage';
+                errorDiv.innerHTML = `
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>${message}</span>
+                `;
+
+                // Insert before form
+                this.form.parentNode.insertBefore(errorDiv, this.form);
+
+                // Add error styling to inputs
+                this.otpInputs.forEach(input => {
+                    if (!input.value) {
+                        input.classList.add('error');
+                    }
+                });
+
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    errorDiv.style.opacity = '0';
+                    errorDiv.style.transform = 'translateY(-10px)';
+                    setTimeout(() => {
+                        if (errorDiv.parentNode) {
+                            errorDiv.remove();
+                        }
+                    }, 300);
+                }, 5000);
+            }
+
+            showMessage(message, type = 'success') {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = type === 'success' ? 'success-message' : 'error-message';
+                messageDiv.innerHTML = `
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+                    <span>${message}</span>
+                `;
+
+                // Insert before form
+                this.form.parentNode.insertBefore(messageDiv, this.form);
+
+                // Auto-hide after 3 seconds
+                setTimeout(() => {
+                    messageDiv.style.opacity = '0';
+                    messageDiv.style.transform = 'translateY(-10px)';
+                    setTimeout(() => {
+                        if (messageDiv.parentNode) {
+                            messageDiv.remove();
+                        }
+                    }, 300);
+                }, 3000);
+            }
+
+            setupFloatingDots() {
+                const dots = document.querySelectorAll('.floating-dot');
+                dots.forEach((dot, index) => {
+                    // Random position
+                    const left = Math.random() * 100;
+                    const top = Math.random() * 100;
+
+                    // Random size
+                    const size = 3 + Math.random() * 5;
+
+                    // Random animation delay
+                    const delay = Math.random() * 6;
+
+                    // Random duration
+                    const duration = 4 + Math.random() * 4;
+
+                    // Set styles
+                    dot.style.left = `${left}%`;
+                    dot.style.top = `${top}%`;
+                    dot.style.width = `${size}px`;
+                    dot.style.height = `${size}px`;
+
+                    // Set animation
+                    dot.style.animation = `
+                        floatDot ${duration}s ease-in-out ${delay}s infinite,
+                        pulseDot ${duration * 0.5}s ease-in-out ${delay}s infinite
+                    `;
+                });
+
+                // Add animation keyframes
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes floatDot {
+                        0%, 100% {
+                            transform: translateY(0) translateX(0);
+                            opacity: 0;
+                        }
+                        10% {
+                            opacity: 0.7;
+                        }
+                        90% {
+                            opacity: 0.7;
+                        }
+                        100% {
+                            transform: translateY(-100vh) translateX(${Math.random() * 100 - 50}px);
+                            opacity: 0;
+                        }
+                    }
+                    
+                    @keyframes pulseDot {
+                        0%, 100% { opacity: 0.3; }
+                        50% { opacity: 0.8; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            const otpHandler = new OTPHandler();
+
+            // Add entrance animation to card
+            const card = document.querySelector('.card');
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px) scale(0.95)';
+
+            setTimeout(() => {
+                card.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0) scale(1)';
+            }, 200);
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instructor Dashboard - TechQuiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            margin: 0;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 1.8rem;
+            color: #111827;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-left: 1rem;
+        }
+
+        .status-WAITING {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-ONGOING {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-DONE {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+
+        form {
+            margin-top: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+        }
+
+        button {
+            background-color: #2563eb;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #1d4ed8;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+
+        <div class="card">
+            <h1>Game Control
+                <span class="status-badge status-{{ game_state.round_status }}">
+                    {{ game_state.get_round_status_display }}
+                </span>
+            </h1>
+
+            <form method="POST">
+                {% csrf_token %}
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="{{ form.active_round.id_for_label }}">Active Round</label>
+                        {{ form.active_round }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.round_status.id_for_label }}">Status</label>
+                        {{ form.round_status }}
+                    </div>
+                </div>
+                <button type="submit" style="width: 100%;">Update Game State</button>
+            </form>
+        </div>
+
+
+    </div>
+</body>
+
+</html>

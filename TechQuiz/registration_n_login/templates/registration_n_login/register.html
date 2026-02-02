@@ -66,7 +66,8 @@
         .register-container {
             min-height: 100vh;
             display: flex;
-            align-items: flex-start;
+            flex-direction: column;
+            align-items: center;
             justify-content: center;
             padding: 1rem;
             background: linear-gradient(135deg, #0a0e27 0%, #1a1a2e 100%);
@@ -179,6 +180,7 @@
                     #0000ff, #4b0082, #9400d3, #ff0000);
             background-size: 300%;
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             animation: gradientAnim 3s ease infinite;
             display: inline-block;
@@ -450,19 +452,19 @@
         }
 
         /* Footer */
-        .footer {
+        .copyright-footer {
             text-align: center;
-            margin-top: 1.5rem;
-            padding-top: 1rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 0.8rem;
-            line-height: 1.4;
-        }
-
-        .footer strong {
-            color: #00f5ff;
-            font-weight: 600;
+            width: 100%;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.75rem;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            animation: fadeIn 0.6s ease-out 0.8s both;
+            border-top: none;
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            margin-top: auto;
         }
 
         /* Input Hints */
@@ -547,7 +549,7 @@
         <div class="register-card">
             <!-- Logo -->
             <div class="logo-container">
-                <img src="{% static 'register/images/tic_logo.png' %}" alt="TIC Logo" class="logo-img">
+                <img src="{% static 'registration_n_login/images/tic_logo.png' %}" alt="TIC Logo" class="logo-img">
             </div>
 
             <!-- Header -->
@@ -712,13 +714,12 @@
                         Register Team
                     </button>
                 </div>
-
-                <!-- Footer -->
-                <div class="footer">
-                    <div>@Developed by <strong>TIC Club</strong></div>
-                    <div>Department of Technology</div>
-                </div>
             </form>
+        </div>
+
+        <!-- Footer -->
+        <div class="copyright-footer">
+            @developed by <strong>TIC</strong> | Department of Technology
         </div>
     </div>
 

@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Round 2 - AI & Algorithms | TIC Club</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Orbitron:wght@400;700;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00f5ff;
+            --purple: #9333ea;
+            --blue: #3b82f6;
+            --bg-dark: #0a0e27;
+            --bg-card: rgba(255, 255, 255, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a0a2e 0%, #0f0520 50%, #1a0a2e 100%);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* Anti-Screenshot Protection */
+        body.blurred {
+            filter: blur(25px);
+            transition: filter 0.3s;
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(rgba(147, 51, 234, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(147, 51, 234, 0.08) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: -1;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 14, 39, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 245, 255, 0.2);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .timer-display {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary);
+        }
+
+        .top-btn {
+            background: rgba(0, 245, 255, 0.1);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .top-btn:hover {
+            background: var(--primary);
+            color: #000;
+        }
+
+        /* Quiz UI */
+        .quiz-container {
+            margin-top: 100px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 1rem;
+        }
+
+        .question-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .question-header {
+            color: var(--primary);
+            font-family: 'Orbitron';
+            margin-bottom: 1rem;
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary);
+            background: rgba(0, 245, 255, 0.05);
+        }
+
+        .option-btn.selected {
+            background: var(--primary);
+            color: #000;
+            border-color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 14, 39, 0.95);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid rgba(0, 245, 255, 0.2);
+
+            /* Added flex-direction for stacking copyright */
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .nav-buttons-row {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+        }
+
+        .nav-btn {
+            padding: 0.6rem 1.5rem;
+            border-radius: 6px;
+            font-family: 'Orbitron';
+            cursor: pointer;
+            border: 1px solid var(--primary);
+            background: transparent;
+            color: var(--primary);
+        }
+
+        .nav-btn.review {
+            border-color: var(--purple);
+            color: var(--purple);
+        }
+
+        .nav-btn.review.active {
+            background: var(--purple);
+            color: #fff;
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .copyright-footer-small {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.65rem;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
+
+        .copyright-footer-small strong {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #0f0520;
+            padding: 2rem;
+            border-radius: 10px;
+            border: 1px solid var(--primary);
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 1rem;
+        }
+
+        .grid-item {
+            padding: 10px;
+            border: 1px solid #444;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .grid-item.answered {
+            background: var(--blue);
+        }
+
+        .grid-item.review {
+            background: var(--purple);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-grid"></div>
+
+    <div class="top-bar">
+        <button class="top-btn" id="grid-btn">Questions</button>
+        <div class="timer-display" id="timer">10:00</div>
+        <button class="top-btn" id="submit-btn">Submit</button>
+    </div>
+
+    <div class="quiz-container">
+        <div class="question-card">
+            <div class="question-header" id="question-header">Question 1 of 10</div>
+            <div class="question-text" id="question-text">Loading...</div>
+            <div class="options-grid" id="options-container"></div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-buttons-row">
+            <button class="nav-btn" id="prev-btn">Prev</button>
+            <button class="nav-btn review" id="review-btn">Mark Review</button>
+            <button class="nav-btn" id="next-btn">Next</button>
+        </div>
+        <div class="copyright-footer-small">
+            @developed by <strong>TIC</strong> | Department of Technology
+        </div>
+    </div>
+
+    <div class="modal" id="confirm-modal">
+        <div class="modal-content">
+            <h2 style="color:var(--primary); font-family:Orbitron;">Submit Quiz?</h2>
+            <p style="margin: 1rem 0;">Confirm submission of Round 2.</p>
+            <button class="top-btn" id="confirm-submit">Yes, Submit</button>
+            <button class="top-btn" style="border-color:#ff4444; color:#ff4444;"
+                onclick="this.parentElement.parentElement.classList.remove('active')">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Inject Questions from Django -->
+    {{ questions_json|json_script:"questions-data" }}
+
+    <script>
+        // Load questions (Fallback to empty just in case)
+        const serverQuestions = JSON.parse(document.getElementById('questions-data').textContent);
+        const quizData = serverQuestions.length > 0 ? serverQuestions : [];
+        const TOTAL_QUESTIONS = quizData.length;
+
+        let state = {
+            current: 0,
+            answers: {},
+            review: [],
+            timeLeft: 600 // 10 minutes
+        };
+
+        function init() {
+            if (TOTAL_QUESTIONS === 0) {
+                document.getElementById('question-text').innerText = "No questions received from server. Please reload.";
+                return;
+            }
+            loadQuestion(0);
+            startTimer();
+            setupAntiCheat();
+        }
+
+        function loadQuestion(index) {
+            state.current = index;
+            const q = quizData[index];
+            document.getElementById('question-header').innerText = `Question ${index + 1} of ${TOTAL_QUESTIONS}`;
+            document.getElementById('question-text').innerText = q.q;
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            q.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = `option-btn ${state.answers[q.id] === i ? 'selected' : ''}`;
+                btn.innerText = opt;
+                btn.onclick = () => selectOption(q.id, i);
+                container.appendChild(btn);
+            });
+
+            document.getElementById('prev-btn').disabled = index === 0;
+            document.getElementById('next-btn').innerText = index === TOTAL_QUESTIONS - 1 ? 'Finish' : 'Next';
+
+            const revBtn = document.getElementById('review-btn');
+            revBtn.className = `nav-btn review ${state.review.includes(index) ? 'active' : ''}`;
+        }
+
+        function selectOption(qId, optIdx) {
+            state.answers[qId] = optIdx;
+            loadQuestion(state.current); // Re-render to show selection
+        }
+
+        function startTimer() {
+            const timerEl = document.getElementById('timer');
+            const interval = setInterval(() => {
+                state.timeLeft--;
+                let mins = Math.floor(state.timeLeft / 60);
+                let secs = state.timeLeft % 60;
+                timerEl.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+
+                if (state.timeLeft <= 0) {
+                    clearInterval(interval);
+                    submitQuiz(true); // Force submit
+                }
+            }, 1000);
+        }
+
+        async function submitQuiz(autoSubmit = false) {
+            // Disable UI
+            document.body.style.pointerEvents = 'none';
+            document.getElementById('question-text').innerText = "Submitting answers to server...";
+
+            const payload = {
+                team_id: localStorage.getItem('teamId'),
+                round: 2,
+                answers: Object.entries(state.answers).map(([id, val]) => ({
+                    question_id: parseInt(id),
+                    selected_option: val
+                }))
+            };
+
+            try {
+                const response = await fetch('/api/submit_round/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert("Submission successful! Redirecting...");
+                    window.location.href = "/waiting-room/";
+                } else {
+                    alert(`Submission Error: ${data.error}`);
+                    document.body.style.pointerEvents = 'auto'; // Re-enable if error
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Network error. Please try again.");
+                document.body.style.pointerEvents = 'auto';
+            }
+        }
+
+        function setupAntiCheat() {
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            window.addEventListener('blur', () => document.body.classList.add('blurred'));
+            window.addEventListener('focus', () => document.body.classList.remove('blurred'));
+
+            document.addEventListener('keydown', e => {
+                if (e.ctrlKey && (e.key === 'c' || e.key === 'u' || e.key === 'i' || e.key === 's')) e.preventDefault();
+            });
+        }
+
+        // Nav Handlers
+        document.getElementById('prev-btn').onclick = () => loadQuestion(state.current - 1);
+        document.getElementById('next-btn').onclick = () => {
+            if (state.current < TOTAL_QUESTIONS - 1) loadQuestion(state.current + 1);
+            else document.getElementById('confirm-modal').classList.add('active');
+        };
+
+        document.getElementById('review-btn').onclick = () => {
+            // Toggle review state
+            const idx = state.review.indexOf(state.current);
+            if (idx > -1) state.review.splice(idx, 1);
+            else state.review.push(state.current);
+
+            loadQuestion(state.current); // Update visual state
+        };
+
+        document.getElementById('submit-btn').onclick = () => document.getElementById('confirm-modal').classList.add('active');
+        document.getElementById('confirm-submit').onclick = () => submitQuiz(false);
+
+        // Add Grid Trigger Logic if button exists (it does in template)
+        const gridBtn = document.getElementById('grid-btn');
+        if (gridBtn) {
+            // Need a grid modal? User template has a 'top-btn' for questions but no modal structure in the provided HTML for the grid itself, 
+            // except a `bg-grid` div which is background. 
+            // The template CSS has `.modal` but only uses it for confirm.
+            // Wait, the template CSS HAS `.grid-container` and `.grid-item` styles but checking the HTML body... 
+            // There is NO grid modal in the user provided HTML snippet, only the BG grid.
+            // However, the styles reference grid items. I will stick strictly to the PROVIDED HTML structure.
+            // If the user wants the grid functionality working, they might need to update the template or I assume it's incomplete.
+            // I'll add a simple alert or log for now if clicked, or just leave it as is.
+            // Wait, I see `d-none` isn't used. 
+            // I will implement basic grid modal if I can infer it, but safer to stick to provided HTML.
+            // Actually, I'll add a minimal grid modal structure dynamically if I have to, but better to just connect what's there.
+            // The user said "use this frontend exactly as it is". So I will NOT add new large blocks unless critical.
+            // The `grid-btn` exists. I'll make it do nothing or show a "Coming Soon" if no modal exists.
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

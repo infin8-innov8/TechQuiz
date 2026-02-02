@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Round 1 - TechQuiz | TIC Club</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Orbitron:wght@400;700;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00f5ff;
+            --purple: #9333ea;
+            --blue: #3b82f6;
+            --bg-dark: #0a0e27;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --warning-yellow: #ffcc00;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        /* Anti-Screenshot Protection */
+        .watermark-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.03);
+            transform: rotate(-45deg);
+            user-select: none;
+        }
+
+        body.blurred .main-content,
+        body.blurred .question-card,
+        body.blurred .options-container {
+            filter: blur(20px);
+            transition: filter 0.3s;
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: -1;
+        }
+
+        .bg-glow {
+            position: fixed;
+            width: 40vw;
+            height: 40vw;
+            background: radial-gradient(circle, rgba(112, 0, 255, 0.15) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 14, 39, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 245, 255, 0.2);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .timer-display {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary);
+        }
+
+        .timer-display.urgent {
+            color: #ef4444;
+            text-shadow: 0 0 10px #ef4444;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .top-btn {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 0.5rem 1rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 4px;
+        }
+
+        .top-btn:hover {
+            background: var(--primary);
+            color: #000;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #00f5ff 0%, #0099ff 100%);
+            border: none;
+            color: #000;
+            font-weight: 700;
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            padding: 1rem;
+        }
+
+        .modal.hidden {
+            display: none;
+        }
+
+        .modal-content {
+            background: rgba(10, 14, 39, 0.98);
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 100%;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .question-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.75rem;
+        }
+
+        .grid-item {
+            aspect-ratio: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .grid-item.answered {
+            background: var(--blue);
+        }
+
+        .grid-item.review {
+            background: var(--purple);
+        }
+
+        .grid-item.current {
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 15px var(--primary);
+        }
+
+        /* Warning Icon for Submit Modal */
+        .warning-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            display: block;
+        }
+
+        .warning-icon svg {
+            width: 100%;
+            height: 100%;
+            /* Fill removed to allow SVG colors */
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-top: 80px;
+            margin-bottom: 80px;
+            padding: 1.5rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .question-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .question-number {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--primary);
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        .options-container {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            padding: 1rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 8px;
+        }
+
+        .option-btn.selected {
+            background: var(--primary);
+            color: #000;
+            font-weight: 600;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 14, 39, 0.95);
+            border-top: 1px solid rgba(0, 245, 255, 0.2);
+            padding: 0.8rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 100;
+        }
+
+        .nav-buttons-container {
+            display: flex;
+            gap: 1rem;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .copyright-footer-small {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.65rem;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
+
+        .copyright-footer-small strong {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .nav-btn {
+            flex: 1;
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 0.75rem 1rem;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .confirm-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .confirm-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .cancel-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .proceed-btn {
+            background: var(--primary);
+            color: #000;
+            font-weight: bold;
+        }
+
+        /* Footer */
+        .copyright-footer {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            margin-top: 2rem;
+            padding-bottom: 1rem;
+            font-weight: 500;
+            position: relative;
+            z-index: 10;
+        }
+
+        .copyright-footer strong {
+            color: #00f5ff;
+            font-weight: 700;
+        }
+
+        @media (max-width: 768px) {
+            .grid-item {
+                font-size: 0.7rem;
+            }
+
+            .nav-btn {
+                font-size: 0.7rem;
+                padding: 0.6rem;
+            }
+
+            .warning-icon {
+                width: 60px;
+                height: 60px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+
+    <div class="top-bar">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                {% load static %}
+                <!-- Assuming you have a logo static file or use a placeholder -->
+                <!-- <img src="{% static 'registration_n_login/images/tic-logo.jpg' %}" style="height:35px; width:35px; border-radius:50%; border:1px solid #00f5ff;"> -->
+                <span
+                    style="font-family:'Orbitron'; font-size:0.8rem; color:#00f5ff; font-weight:bold; display:none; @media(min-width:768px){display:inline;}">TIC</span>
+            </div>
+            <button class="top-btn" id="grid-btn">Questions</button>
+        </div>
+        <div class="timer-display" id="timer">20:00</div>
+        <button class="top-btn submit-btn" id="submit-btn">Submit</button>
+    </div>
+
+    <div class="modal hidden" id="grid-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Question Navigator</div>
+                <button class="close-btn" id="close-grid">&times;</button>
+            </div>
+            <div class="question-grid" id="question-grid"></div>
+        </div>
+    </div>
+
+    <div class="modal hidden" id="confirm-modal">
+        <div class="modal-content" style="text-align: center;">
+            <div class="warning-icon">
+                <!-- Red Warning Triangle Logo -->
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 4L4.15 19H19.85L12 4Z" stroke="#ef4444" stroke-width="2" fill="white"
+                        stroke-linejoin="round" />
+                    <path d="M12 9V14" stroke="#ef4444" stroke-width="2" stroke-linecap="round" />
+                    <path d="M12 17H12.01" stroke="#ef4444" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </div>
+            <div class="modal-title">Submit Quiz?</div>
+            <p style="margin: 1rem 0; line-height: 1.5; color: #ccc;">Are you sure you want to end the quiz?<br>Your
+                results will be calculated immediately.</p>
+            <div class="confirm-buttons">
+                <button class="confirm-btn cancel-btn" id="cancel-submit">Cancel</button>
+                <button class="confirm-btn proceed-btn" id="confirm-submit">Submit Now</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="question-card">
+            <div class="question-number" id="question-number">Question 1 of 20</div>
+            <div class="question-text" id="question-text">Loading...</div>
+        </div>
+        <div class="options-container" id="options-container"></div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-buttons-container">
+            <button class="nav-btn" id="prev-btn">Previous</button>
+            <button class="nav-btn" id="review-btn"
+                style="border-color: var(--purple); color: var(--purple);">Review</button>
+            <button class="nav-btn" id="next-btn">Next</button>
+        </div>
+        <div class="copyright-footer-small">
+            @developed by <strong>TIC</strong> | Department of Technology
+        </div>
+    </div>
+
+    {{ questions_json|json_script:"questions-data" }}
+
+    <script>
+        const TOTAL_TIME = 20 * 60;
+        const STORAGE_PREFIX = 'round1_';
+
+        // Load questions from backend (Google Sheet) or fallback to empty array
+        const serverQuestions = JSON.parse(document.getElementById('questions-data').textContent);
+        const quizData = serverQuestions.length > 0 ? serverQuestions : [
+            // Fallback sample if sheet fails (kept for dev safety)
+            { id: 1, q: "Sample Question: What is 2+2?", options: ["3", "4", "5", "6"], correct: 1 }
+        ];
+
+        const TOTAL_QUESTIONS = quizData.length;
+
+        let state = {
+            currentQuestion: 0,
+            answers: {},
+            reviewMarked: [],
+            timeRemaining: TOTAL_TIME,
+            timerInterval: null
+        };
+
+        const elements = {
+            timer: document.getElementById('timer'),
+            gridBtn: document.getElementById('grid-btn'),
+            submitBtn: document.getElementById('submit-btn'),
+            gridModal: document.getElementById('grid-modal'),
+            confirmModal: document.getElementById('confirm-modal'),
+            closeGrid: document.getElementById('close-grid'),
+            cancelSubmit: document.getElementById('cancel-submit'),
+            confirmSubmit: document.getElementById('confirm-submit'),
+            questionGrid: document.getElementById('question-grid'),
+            questionNumber: document.getElementById('question-number'),
+            questionText: document.getElementById('question-text'),
+            optionsContainer: document.getElementById('options-container'),
+            prevBtn: document.getElementById('prev-btn'),
+            reviewBtn: document.getElementById('review-btn'),
+            nextBtn: document.getElementById('next-btn')
+        };
+
+        function initQuiz() {
+            loadState();
+
+            // Validate currentQuestion against loaded data length
+            if (state.currentQuestion >= quizData.length || state.currentQuestion < 0) {
+                console.warn("Resetting current question index due to size mismatch.");
+                state.currentQuestion = 0;
+            }
+
+            // console.log("Loaded Questions:", quizData); // Security: Removed log
+
+            createQuestionGrid();
+            loadQuestion(state.currentQuestion);
+            startTimer();
+            attachEventListeners();
+        }
+
+        function loadState() {
+            const savedAnswers = localStorage.getItem(STORAGE_PREFIX + 'answers');
+            const savedReview = localStorage.getItem(STORAGE_PREFIX + 'review');
+            const savedTime = localStorage.getItem(STORAGE_PREFIX + 'timer');
+            const savedCurrent = localStorage.getItem(STORAGE_PREFIX + 'current');
+
+            if (savedAnswers) state.answers = JSON.parse(savedAnswers);
+            if (savedReview) state.reviewMarked = JSON.parse(savedReview);
+            if (savedTime) state.timeRemaining = parseInt(savedTime);
+            if (savedCurrent) state.currentQuestion = parseInt(savedCurrent);
+        }
+
+        function saveState() {
+            localStorage.setItem(STORAGE_PREFIX + 'answers', JSON.stringify(state.answers));
+            localStorage.setItem(STORAGE_PREFIX + 'review', JSON.stringify(state.reviewMarked));
+            localStorage.setItem(STORAGE_PREFIX + 'timer', state.timeRemaining.toString());
+            localStorage.setItem(STORAGE_PREFIX + 'current', state.currentQuestion.toString());
+        }
+
+        function createQuestionGrid() {
+            elements.questionGrid.innerHTML = '';
+            for (let i = 0; i < TOTAL_QUESTIONS; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'grid-item';
+                btn.textContent = i + 1;
+                btn.onclick = () => { state.currentQuestion = i; loadQuestion(i); elements.gridModal.classList.add('hidden'); };
+                elements.questionGrid.appendChild(btn);
+            }
+        }
+
+        function updateQuestionGrid() {
+            const gridItems = elements.questionGrid.querySelectorAll('.grid-item');
+            gridItems.forEach((item, index) => {
+                item.classList.remove('answered', 'review', 'current');
+                if (index === state.currentQuestion) item.classList.add('current');
+                if (state.reviewMarked.includes(index)) item.classList.add('review');
+                else if (state.answers[quizData[index].id] !== undefined) item.classList.add('answered');
+            });
+        }
+
+        function loadQuestion(index) {
+            const question = quizData[index];
+            if (!question || !question.options) {
+                console.error("Invalid question data at index", index, question);
+                elements.questionText.textContent = "Error loading question.";
+                elements.optionsContainer.innerHTML = '';
+                return;
+            }
+
+            elements.questionNumber.textContent = `Question ${index + 1} of ${TOTAL_QUESTIONS}`;
+            elements.questionText.textContent = question.q;
+            elements.optionsContainer.innerHTML = '';
+
+            question.options.forEach((option, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn' + (state.answers[question.id] === i ? ' selected' : '');
+                btn.textContent = option;
+                btn.onclick = () => { state.answers[question.id] = i; loadQuestion(index); };
+                elements.optionsContainer.appendChild(btn);
+            });
+
+            elements.prevBtn.disabled = (index === 0);
+            elements.nextBtn.textContent = (index === TOTAL_QUESTIONS - 1) ? 'Finish' : 'Next';
+            updateQuestionGrid();
+            saveState();
+        }
+
+        function startTimer() {
+            state.timerInterval = setInterval(() => {
+                state.timeRemaining--;
+                const min = Math.floor(state.timeRemaining / 60);
+                const sec = state.timeRemaining % 60;
+                elements.timer.textContent = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+                if (state.timeRemaining < 120) elements.timer.classList.add('urgent');
+                if (state.timeRemaining <= 0) submitQuiz();
+            }, 1000);
+        }
+
+        const API_BASE_URL = '/api';
+
+        async function submitQuiz() {
+            clearInterval(state.timerInterval);
+
+            // Disable UI
+            document.body.style.pointerEvents = 'none';
+            const submitText = document.getElementById('question-text');
+            if (submitText) submitText.textContent = "Submitting answers to server...";
+
+            const teamId = localStorage.getItem('teamId');
+            if (!teamId) {
+                // For now, if no local storage, we might just alert, or assume session based auth is enough if we change logic
+                // But preserving user logic:
+                // alert("Error: Team ID not found. Please login again.");
+                // window.location.href = 'login.html';
+                // return;
+            }
+
+            // PREPARE ANSWERS PAYLOAD
+            const answersList = [];
+            quizData.forEach(q => {
+                const selected = state.answers[q.id];
+                if (selected !== undefined) {
+                    answersList.push({
+                        question_id: q.id,
+                        selected_option: selected
+                    });
+                }
+            });
+
+            const payload = {
+                team_id: teamId,
+                answers: answersList, // Sending raw answers
+                round: 1
+            };
+
+            try {
+                // Using a relative path that we will define in urls.py
+                const response = await fetch(`/api/quiz/submit_round/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Save Qualification Status
+                    localStorage.setItem('isQualified', data.qualified ? 'true' : 'false');
+                    localStorage.setItem('round1_score', data.score); // Save verified score
+
+                    // Clear state
+                    const keysToRemove = ['answers', 'review', 'timer', 'current'];
+                    keysToRemove.forEach(k => localStorage.removeItem(STORAGE_PREFIX + k));
+
+                    // Redirect
+                    window.location.href = '/waiting-room/'; // Redirect back to waiting room
+                } else {
+                    alert(`Submission Failed: ${data.error || 'Unknown error'}`);
+                    document.body.style.pointerEvents = 'auto';
+                }
+            } catch (error) {
+                console.error('Network Error:', error);
+                alert('Network Error. Please ensure backend is running.');
+                document.body.style.pointerEvents = 'auto';
+            }
+        }
+
+        function attachEventListeners() {
+            elements.gridBtn.onclick = () => elements.gridModal.classList.remove('hidden');
+            elements.closeGrid.onclick = () => elements.gridModal.classList.add('hidden');
+            elements.submitBtn.onclick = () => elements.confirmModal.classList.remove('hidden');
+            elements.cancelSubmit.onclick = () => elements.confirmModal.classList.add('hidden');
+            elements.confirmSubmit.onclick = submitQuiz;
+            elements.prevBtn.onclick = () => { if (state.currentQuestion > 0) loadQuestion(--state.currentQuestion); };
+            elements.nextBtn.onclick = () => {
+                if (state.currentQuestion < TOTAL_QUESTIONS - 1) loadQuestion(++state.currentQuestion);
+                else elements.confirmModal.classList.remove('hidden');
+            };
+            elements.reviewBtn.onclick = () => {
+                const idx = state.reviewMarked.indexOf(state.currentQuestion);
+                if (idx > -1) state.reviewMarked.splice(idx, 1);
+                else state.reviewMarked.push(state.currentQuestion);
+
+                // Save review state immediately before navigating
+                saveState();
+
+                // Auto-navigate to next question if available
+                if (state.currentQuestion < TOTAL_QUESTIONS - 1) {
+                    loadQuestion(++state.currentQuestion);
+                } else {
+                    // Update grid to reflect review status even if we stay on last question
+                    updateQuestionGrid();
+                    // Optional: Show submit modal if it's the last question? 
+                    // elements.confirmModal.classList.remove('hidden');
+                }
+            };
+        }
+
+        window.addEventListener('DOMContentLoaded', initQuiz);
+
+        // ========== ANTI-SCREENSHOT PROTECTION ==========
+
+        // Disable Right-Click Context Menu
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Block Screenshot & Developer Tools Keyboard Shortcuts
+        document.addEventListener('keydown', function (e) {
+            // Developer Tools: F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+            if (e.keyCode == 123 ||
+                (e.ctrlKey && e.shiftKey && (e.key == 'I' || e.key == 'J')) ||
+                (e.ctrlKey && e.key == 'U')) {
+                e.preventDefault();
+                return false;
+            }
+
+            // Copy/Paste/Save/Print: Ctrl+C, Ctrl+V, Ctrl+X, Ctrl+S, Ctrl+P, Ctrl+A
+            if (e.ctrlKey && (e.key == 'c' || e.key == 'v' || e.key == 'x' ||
+                e.key == 's' || e.key == 'p' || e.key == 'a')) {
+                e.preventDefault();
+                return false;
+            }
+
+            // Windows Screenshot Shortcuts
+            // PrtScn, Alt+PrtScn, Win+Shift+S, Win+PrtScn
+            if (e.key == 'PrintScreen' || e.keyCode == 44) {
+                e.preventDefault();
+                return false;
+            }
+
+            // Mac Screenshot Shortcuts
+            // Cmd+Shift+3, Cmd+Shift+4, Cmd+Shift+5
+            if (e.metaKey && e.shiftKey && (e.key == '3' || e.key == '4' || e.key == '5')) {
+                e.preventDefault();
+                return false;
+            }
+
+            // Additional Mac: Cmd+Shift+6 (Touch Bar screenshot)
+            if (e.metaKey && e.shiftKey && e.key == '6') {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Blur Content on Window Focus Loss (prevents screenshot tools)
+        window.addEventListener('blur', () => {
+            document.body.classList.add('blurred');
+        });
+
+        window.addEventListener('focus', () => {
+            document.body.classList.remove('blurred');
+        });
+
+        // Detect if DevTools is open (basic detection)
+        const detectDevTools = () => {
+            const threshold = 160;
+            if (window.outerWidth - window.innerWidth > threshold ||
+                window.outerHeight - window.innerHeight > threshold) {
+                document.body.classList.add('blurred');
+            } else {
+                document.body.classList.remove('blurred');
+            }
+        };
+
+        window.addEventListener('resize', detectDevTools);
+        setInterval(detectDevTools, 1000);
+
+    </script>
+</body>
+
+</html>
