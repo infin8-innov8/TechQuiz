@@ -630,6 +630,14 @@
         const API_BASE_URL = '/api';
 
         async function submitQuiz(isMalpractice = false, malpracticeReason = "") {
+            // LOCK SUBMISSION
+            if (state.submitted) {
+                // If already submitted and this is malpractice, we should probably force redirect if not happening?
+                // But usually the first call handles it. To be safe, if malpracticing, allow re-redirect.
+                if (!isMalpractice) return;
+            }
+            state.submitted = true; // Prevents subsequent calls (manual or malpractice)
+
             clearInterval(state.timerInterval);
 
             // Disable UI
@@ -643,15 +651,14 @@
                 if (totalAnswered < TOTAL_QUESTIONS) {
                     alert(`You must answer ALL ${TOTAL_QUESTIONS} questions before submitting!\nYou have answered ${totalAnswered}.`);
                     document.body.style.pointerEvents = 'auto'; // Re-enable
+                    state.submitted = false; // RELEASE LOCK
                     if (submitText) submitText.textContent = quizData[state.currentQuestion].q; // Restore text
-                    // Hide modal if open
                     elements.confirmModal.classList.add('hidden');
                     return;
                 }
             }
 
             const teamId = localStorage.getItem('teamId');
-            // ID will be grabbed from session in backend anyway, but we keep this flow.
 
             // PREPARE ANSWERS PAYLOAD
             const answersList = [];
@@ -666,17 +673,22 @@
             });
 
             const payload = {
-                team_id: teamId, // Optional now as backend uses session
+                team_id: teamId,
                 answers: answersList,
                 round: 1,
                 is_malpractice: isMalpractice,
                 malpractice_reason: malpracticeReason
             };
 
-            try {
-                // Using sendBeacon for reload/close events if robust, but fetch is fine for tab switch
-                // For critical unload, we might try sendBeacon but we need to format data as Blob/FormData
+            function cleanupAndRedirect() {
+                // Clear state
+                const keysToRemove = ['answers', 'review', 'timer', 'current'];
+                keysToRemove.forEach(k => localStorage.removeItem(STORAGE_PREFIX + k));
+                // Force Redirect
+                window.location.replace('/waiting-room/');
+            }
 
+            try {
                 const response = await fetch(`/api/quiz/submit_round/`, {
                     method: 'POST',
                     headers: {
@@ -689,27 +701,29 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Save Qualification Status
                     localStorage.setItem('isQualified', data.qualified ? 'true' : 'false');
                     localStorage.setItem('round1_score', data.score);
-
-                    // Clear state
-                    const keysToRemove = ['answers', 'review', 'timer', 'current'];
-                    keysToRemove.forEach(k => localStorage.removeItem(STORAGE_PREFIX + k));
-
-                    // Redirect
-                    window.location.href = '/waiting-room/';
+                    cleanupAndRedirect();
                 } else {
+                    // IF MALPRACTICE, WE REDIRECT ANYWAY to break loops
+                    if (isMalpractice) {
+                        alert(`Malpractice Recorded. Redirecting...`);
+                        cleanupAndRedirect();
+                        return;
+                    }
+
                     alert(`Submission Failed: ${data.error || 'Unknown error'}`);
-                    // If malpractice, we force redirect anyway? No, maybe server error.
-                    // But if it's malpractice, we probably want to kick them out or ensure submission.
-                    if (isMalpractice) window.location.href = '/waiting-room/';
-                    document.body.style.pointerEvents = 'auto';
+                    state.submitted = false; // Release lock so innocent user can retry
+                    document.body.style.pointerEvents = 'auto'; // Re-enable
                 }
             } catch (error) {
                 console.error('Network Error:', error);
-                if (isMalpractice) window.location.href = '/waiting-room/';
+                if (isMalpractice) {
+                    cleanupAndRedirect();
+                    return;
+                }
                 alert('Network Error. Please ensure backend is running.');
+                state.submitted = false; // Release lock
                 document.body.style.pointerEvents = 'auto';
             }
         }
@@ -717,7 +731,12 @@
         function handleMalpractice(reason) {
             // Prevent multiple triggers
             if (state.submitted) return;
-            state.submitted = true; // Flag to prevent double submit
+            // state.submitted = true; // Handled inside submitQuiz now? No, set here to block others INSTANTLY.
+            // Wait, if I set it here, submitQuiz(true) will see it's true.
+            // My submitQuiz has `if (state.submitted && !isMalpractice) return;` logic.
+            // Let's rely on submitQuiz logic or set it here?
+            // Safer to let submitQuiz handle the lock, but we must blocking manual submit immediately?
+            // Actually, call submitQuiz(true) and let it race.
             alert(`Malpractice Detected: ${reason}.\nYour test is being auto-submitted.`);
             submitQuiz(true, reason);
         }
