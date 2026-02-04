@@ -366,217 +366,182 @@
 
                 if (state.timeLeft <= 0) {
                     clearInterval(interval);
-                    submitQuiz(true); // Force submit
+                    submitQuiz(true, "Time Up"); // Force submit
                 }
-                async function submitQuiz(isMalpractice = false, malpracticeReason = "") {
-                    // LOCK SUBMISSION
-                    if (isSubmitted) {
-                        if (!isMalpractice) return;
+            }, 1000);
+        }
+
+        let isSubmitted = false;
+        async function submitQuiz(isMalpractice = false, malpracticeReason = "") {
+            // LOCK SUBMISSION
+            if (isSubmitted) {
+                if (!isMalpractice) return;
+            }
+            isSubmitted = true; // Lock
+
+            // Disable UI
+            document.body.style.pointerEvents = 'none';
+            const submitText = document.getElementById('question-text');
+            if (submitText) submitText.innerText = isMalpractice ? `Malpractice Detected (${malpracticeReason})! Auto-submitting...` : "Submitting answers to server...";
+
+            // MANDATORY CHECK (Only for manual submission)
+            if (!isMalpractice) {
+                const totalAnswered = Object.keys(state.answers).length;
+                if (totalAnswered < TOTAL_QUESTIONS) {
+                    alert(`You must answer ALL ${TOTAL_QUESTIONS} questions before submitting!\nYou have answered ${totalAnswered}.`);
+                    document.body.style.pointerEvents = 'auto'; // Re-enable
+                    isSubmitted = false; // RELEASE LOCK
+                    if (submitText) submitText.innerText = quizData[state.current].q; // Restore text
+                    document.getElementById('confirm-modal').classList.remove('active');
+                    return;
+                }
+            }
+
+            const payload = {
+                team_id: localStorage.getItem('teamId'),
+                round: 2,
+                answers: Object.entries(state.answers).map(([id, val]) => ({
+                    question_id: parseInt(id),
+                    selected_option: val
+                })),
+                is_malpractice: isMalpractice,
+                malpractice_reason: malpracticeReason
+            };
+
+            function cleanupAndRedirect() {
+                window.location.replace("/waiting-room/");
+            }
+
+            try {
+                const response = await fetch('/api/quiz/submit_round/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    cleanupAndRedirect();
+                } else {
+                    // IF MALPRACTICE, WE REDIRECT ANYWAY to break loops
+                    if (isMalpractice) {
+                        alert(`Malpractice Recorded. Redirecting...`);
+                        cleanupAndRedirect();
+                        return;
                     }
-                    isSubmitted = true; // Lock
 
-                    // Disable UI
-                    document.body.style.pointerEvents = 'none';
-                    const submitText = document.getElementById('question-text');
-                    if (submitText) submitText.innerText = isMalpractice ? `Malpractice Detected (${malpracticeReason})! Auto-submitting...` : "Submitting answers to server...";
+                    alert(`Submission Error: ${data.error}`);
+                    isSubmitted = false; // Release lock
+                    document.body.style.pointerEvents = 'auto'; // Re-enable if error
+                }
+            } catch (e) {
+                console.error(e);
+                if (isMalpractice) {
+                    cleanupAndRedirect();
+                    return;
+                }
+                alert("Network error. Please try again.");
+                isSubmitted = false; // Release lock
+                document.body.style.pointerEvents = 'auto';
+            }
+        }
 
-                    // MANDATORY CHECK (Only for manual submission)
-                    if (!isMalpractice) {
-                        const totalAnswered = Object.keys(state.answers).length;
-                        if (totalAnswered < TOTAL_QUESTIONS) {
-                            alert(`You must answer ALL ${TOTAL_QUESTIONS} questions before submitting!\nYou have answered ${totalAnswered}.`);
-                            document.body.style.pointerEvents = 'auto'; // Re-enable
-                            isSubmitted = false; // RELEASE LOCK
-                            if (submitText) submitText.innerText = quizData[state.current].q; // Restore text
-                            document.getElementById('confirm-modal').classList.remove('active');
-                            return;
-                        }
-                    }
+        function handleMalpractice(reason) {
+            if (isSubmitted) return;
+            isSubmitted = true;
+            alert(`Malpractice Detected: ${reason}.\nYour test is being auto-submitted.`);
+            submitQuiz(true, reason);
+        }
 
-                    const payload = {
+        function setupAntiCheat() {
+            document.addEventListener('contextmenu', e => e.preventDefault());
+
+            // 1. Tab Switch / Minimize
+            document.addEventListener("visibilitychange", () => {
+                if (document.visibilityState === 'hidden') {
+                    handleMalpractice("Tab Switch / Minimize");
+                }
+            });
+
+            // 2. Blur (Optional, can be strict)
+            // window.addEventListener('blur', () => {
+            //      handleMalpractice("Window Focus Lost");
+            // });
+            // Using blur for visual effect only as per original code, or upgrading to penalty?
+            // User requested: "if user switches tabs... auto submitted".
+            // Visibility change covers tabs. Blur covers clicking outside the window.
+            // I'll keep the visual blur effect but rely on visibilitychange for strict auto-submit to avoid false positives.
+
+            // 3. Back Button
+            history.pushState(null, null, location.href);
+            window.addEventListener('popstate', () => {
+                history.pushState(null, null, location.href);
+                handleMalpractice("Back Button Used");
+            });
+
+            // 4. Key Restrictions
+            document.addEventListener('keydown', e => {
+                if (e.ctrlKey && (e.key === 'c' || e.key === 'u' || e.key === 'i' || e.key === 's')) e.preventDefault();
+            });
+
+            // 5. Refresh/Close
+            window.addEventListener('unload', () => {
+                if (!isSubmitted) {
+                    const payload = JSON.stringify({
                         team_id: localStorage.getItem('teamId'),
+                        answers: [],
                         round: 2,
-                        answers: Object.entries(state.answers).map(([id, val]) => ({
-                            question_id: parseInt(id),
-                            selected_option: val
-                        })),
-                        is_malpractice: isMalpractice,
-                        malpractice_reason: malpracticeReason
-                    };
-
-                    function cleanupAndRedirect() {
-                        // Clear state (No explicit clear in previous R2 code, but R1 has it)
-                        // Round 2 didn't define a STORAGE_PREFIX variable in the snippet I saw.
-                        // Assuming R2 doesn't heavily use localStorage for state OR used defaults.
-                        // Wait, Round 2 init() loads questions but doesn't mention loadState().
-                        // If R2 doesn't save to localStorage, then the "answers persisted" issue is only R1?
-                        // Wait, user said "especially if the administrator deletes his score record... gets answers selected initially".
-                        // This implies localstorage IS used. 
-                        // But my view of R2 didn't show saveState/loadState calls in the snippet.
-                        // Maybe I missed it in lines 413+ (setupAntiCheat)?
-                        // Or maybe R2 relies on browser cache? 
-                        // Let's look closer at R2 init/selectOption.
-                        // selectOption just sets state.answers[qId].
-                        // It doesn't seem to persist to localStorage in the code I viewed.
-                        // But wait, if R2 has no persistence, then refreshing would clear answers.
-                        // If the user says answers persist, maybe R2 DOES have persistence I missed?
-                        // Or maybe the user meant R1.
-                        // Regardless, I'll redirect safely.
-                        window.location.replace("/waiting-room/");
-                    }
-
-                    try {
-                        const response = await fetch('/api/quiz/submit_round/', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': '{{ csrf_token }}'
-                            },
-                            body: JSON.stringify(payload)
-                        });
-
-                        const data = await response.json();
-
-                        if (response.ok) {
-                            cleanupAndRedirect();
-                        } else {
-                            // IF MALPRACTICE, WE REDIRECT ANYWAY to break loops
-                            if (isMalpractice) {
-                                alert(`Malpractice Recorded. Redirecting...`);
-                                cleanupAndRedirect();
-                                return;
-                            }
-
-                            alert(`Submission Error: ${data.error}`);
-                            isSubmitted = false; // Release lock
-                            document.body.style.pointerEvents = 'auto'; // Re-enable if error
-                        }
-                    } catch (e) {
-                        console.error(e);
-                        if (isMalpractice) {
-                            cleanupAndRedirect();
-                            return;
-                        }
-                        alert("Network error. Please try again.");
-                        isSubmitted = false; // Release lock
-                        document.body.style.pointerEvents = 'auto';
-                    }
-                }
-
-                // let isSubmitted = false; // Already defined below in existing code, will be hoisted or I should check order.
-                // The existing code defined `let isSubmitted = false` right after this function block.
-                // I will rely on that definitions or ensure it is accessible.
-                // JS var scoping: function uses variable defined below it? 
-                // `let` is not hoisted.
-                // I should probably move the `let isSubmitted` to top of script or ensure it's defined before usage.
-                // In the original file, it was defined AFTER submitQuiz. That works if submitQuiz is called AFTER definition.
-                // But `submitQuiz` is async function.
-                // To be safe, I've used `let state` at the top. I SHOULD define `isSubmitted` at the top with `state`.
-                // But I am only replacing this block. I'll check where to insert.
-                // Actually, I can just use `window.isSubmitted` or `state.submitted` if I add it to state.
-                // R2 has `state` object. I'll add `submitted` to `state` in R2 as well for consistency.
-
-                // REVISING strategy: Use `state.submitted` in R2 as well.
-                // Need to update `state` definition?
-                // state definition is at line 313. I am editing 371-412.
-                // I can just rely on `state.submitted`. JS objects are flexible.
-                // So I'll change `if (isSubmitted)` to `if (state.submitted)`.
-
-
-
-                let isSubmitted = false;
-                function handleMalpractice(reason) {
-                    if (isSubmitted) return;
-                    isSubmitted = true;
-                    alert(`Malpractice Detected: ${reason}.\nYour test is being auto-submitted.`);
-                    submitQuiz(true, reason);
-                }
-
-                function setupAntiCheat() {
-                    document.addEventListener('contextmenu', e => e.preventDefault());
-
-                    // 1. Tab Switch / Minimize
-                    document.addEventListener("visibilitychange", () => {
-                        if (document.visibilityState === 'hidden') {
-                            handleMalpractice("Tab Switch / Minimize");
-                        }
+                        is_malpractice: true,
+                        malpractice_reason: "Page Refresh/Close"
                     });
-
-                    // 2. Blur (Optional, can be strict)
-                    // window.addEventListener('blur', () => {
-                    //      handleMalpractice("Window Focus Lost");
-                    // });
-                    // Using blur for visual effect only as per original code, or upgrading to penalty?
-                    // User requested: "if user switches tabs... auto submitted".
-                    // Visibility change covers tabs. Blur covers clicking outside the window.
-                    // I'll keep the visual blur effect but rely on visibilitychange for strict auto-submit to avoid false positives.
-
-                    // 3. Back Button
-                    history.pushState(null, null, location.href);
-                    window.addEventListener('popstate', () => {
-                        history.pushState(null, null, location.href);
-                        handleMalpractice("Back Button Used");
-                    });
-
-                    // 4. Key Restrictions
-                    document.addEventListener('keydown', e => {
-                        if (e.ctrlKey && (e.key === 'c' || e.key === 'u' || e.key === 'i' || e.key === 's')) e.preventDefault();
-                    });
-
-                    // 5. Refresh/Close
-                    window.addEventListener('unload', () => {
-                        if (!isSubmitted) {
-                            const payload = JSON.stringify({
-                                team_id: localStorage.getItem('teamId'),
-                                answers: [],
-                                round: 2,
-                                is_malpractice: true,
-                                malpractice_reason: "Page Refresh/Close"
-                            });
-                            const blob = new Blob([payload], { type: 'application/json' });
-                            navigator.sendBeacon('/api/quiz/submit_round/', blob);
-                        }
-                    });
+                    const blob = new Blob([payload], { type: 'application/json' });
+                    navigator.sendBeacon('/api/quiz/submit_round/', blob);
                 }
+            });
+        }
 
-                // Nav Handlers
-                document.getElementById('prev-btn').onclick = () => { if (state.current > 0) loadQuestion(state.current - 1); };
-                document.getElementById('next-btn').onclick = () => {
-                    if (state.current < TOTAL_QUESTIONS - 1) loadQuestion(state.current + 1);
-                    else document.getElementById('confirm-modal').classList.add('active');
-                };
+        // Nav Handlers
+        document.getElementById('prev-btn').onclick = () => { if (state.current > 0) loadQuestion(state.current - 1); };
+        document.getElementById('next-btn').onclick = () => {
+            if (state.current < TOTAL_QUESTIONS - 1) loadQuestion(state.current + 1);
+            else document.getElementById('confirm-modal').classList.add('active');
+        };
 
-                document.getElementById('review-btn').onclick = () => {
-                    // Toggle review state
-                    const idx = state.review.indexOf(state.current);
-                    if (idx > -1) state.review.splice(idx, 1);
-                    else state.review.push(state.current);
+        document.getElementById('review-btn').onclick = () => {
+            // Toggle review state
+            const idx = state.review.indexOf(state.current);
+            if (idx > -1) state.review.splice(idx, 1);
+            else state.review.push(state.current);
 
-                    loadQuestion(state.current); // Update visual state
-                };
+            loadQuestion(state.current); // Update visual state
+        };
 
-                document.getElementById('submit-btn').onclick = () => document.getElementById('confirm-modal').classList.add('active');
-                document.getElementById('confirm-submit').onclick = () => submitQuiz(false); // Manual
+        document.getElementById('submit-btn').onclick = () => document.getElementById('confirm-modal').classList.add('active');
+        document.getElementById('confirm-submit').onclick = () => submitQuiz(false); // Manual
 
-                // Add Grid Trigger Logic if button exists (it does in template)
-                const gridBtn = document.getElementById('grid-btn');
-                if (gridBtn) {
-                    // Need a grid modal? User template has a 'top-btn' for questions but no modal structure in the provided HTML for the grid itself, 
-                    // except a `bg-grid` div which is background. 
-                    // The template CSS has `.modal` but only uses it for confirm.
-                    // Wait, the template CSS HAS `.grid-container` and `.grid-item` styles but checking the HTML body... 
-                    // There is NO grid modal in the user provided HTML snippet, only the BG grid.
-                    // However, the styles reference grid items. I will stick strictly to the PROVIDED HTML structure.
-                    // If the user wants the grid functionality working, they might need to update the template or I assume it's incomplete.
-                    // I'll add a simple alert or log for now if clicked, or just leave it as is.
-                    // Wait, I see `d-none` isn't used. 
-                    // I will implement basic grid modal if I can infer it, but safer to stick to provided HTML.
-                    // Actually, I'll add a minimal grid modal structure dynamically if I have to, but better to just connect what's there.
-                    // The user said "use this frontend exactly as it is". So I will NOT add new large blocks unless critical.
-                    // The `grid-btn` exists. I'll make it do nothing or show a "Coming Soon" if no modal exists.
-                }
+        // Add Grid Trigger Logic if button exists (it does in template)
+        const gridBtn = document.getElementById('grid-btn');
+        if (gridBtn) {
+            // Need a grid modal? User template has a 'top-btn' for questions but no modal structure in the provided HTML for the grid itself, 
+            // except a `bg-grid` div which is background. 
+            // The template CSS has `.modal` but only uses it for confirm.
+            // Wait, the template CSS HAS `.grid-container` and `.grid-item` styles but checking the HTML body... 
+            // There is NO grid modal in the user provided HTML snippet, only the BG grid.
+            // However, the styles reference grid items. I will stick strictly to the PROVIDED HTML structure.
+            // If the user wants the grid functionality working, they might need to update the template or I assume it's incomplete.
+            // I'll add a simple alert or log for now if clicked, or just leave it as is.
+            // Wait, I see `d-none` isn't used. 
+            // I will implement basic grid modal if I can infer it, but safer to stick to provided HTML.
+            // Actually, I'll add a minimal grid modal structure dynamically if I have to, but better to just connect what's there.
+            // The user said "use this frontend exactly as it is". So I will NOT add new large blocks unless critical.
+            // The `grid-btn` exists. I'll make it do nothing or show a "Coming Soon" if no modal exists.
+        }
 
-                init();
+        init();
     </script>
 </body>
 
