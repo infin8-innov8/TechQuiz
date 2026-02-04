@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TIC Tech Quiz - Waiting Room</title>
-    <!-- <link rel="stylesheet" href="style.css"> -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -21,16 +20,16 @@
         body {
             overflow: hidden;
             background-color: #0a0e27;
-            /* Fix: Prevent rubber-banding/overscroll on mobile */
             overscroll-behavior: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         .bubbler-container {
             position: relative;
             width: 100%;
-            height: 100vh;
-            /* Fallback */
-            /* Fix: Use dynamic viewport height for mobile browsers */
             height: 100dvh;
             overflow: hidden;
             background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1629 100%);
@@ -43,7 +42,6 @@
             width: 100%;
             height: 100%;
             cursor: pointer;
-            /* Fix: Disables double-tap zoom and scrolling on the canvas */
             touch-action: none;
         }
 
@@ -65,7 +63,7 @@
 
         .bubbler-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 2.5rem;
+            font-size: clamp(2rem, 5vw, 2.5rem);
             font-weight: 900;
             background: linear-gradient(135deg, #00f5ff 0%, #00d4ff 50%, #0099ff 100%);
             -webkit-background-clip: text;
@@ -78,7 +76,7 @@
 
         .bubbler-subtitle {
             font-family: 'Inter', sans-serif;
-            font-size: 1.2rem;
+            font-size: clamp(1rem, 3vw, 1.2rem);
             color: rgba(255, 255, 255, 0.7);
             font-weight: 300;
             letter-spacing: 2px;
@@ -97,7 +95,7 @@
 
         .bubbler-instruction {
             font-family: 'Inter', sans-serif;
-            font-size: 1rem;
+            font-size: clamp(0.9rem, 2vw, 1rem);
             color: rgba(255, 255, 255, 0.6);
             margin-bottom: 1rem;
             animation: fade-in-out 2s ease-in-out infinite;
@@ -106,12 +104,14 @@
         .bubbler-stats {
             display: flex;
             justify-content: center;
-            gap: 3rem;
+            gap: clamp(1rem, 4vw, 3rem);
             margin-top: 1rem;
+            flex-wrap: wrap;
         }
 
         .stat-item {
             font-family: 'Orbitron', sans-serif;
+            min-width: 100px;
         }
 
         .stat-label {
@@ -154,36 +154,6 @@
             }
         }
 
-        .particle {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: rgba(0, 245, 255, 0.6);
-            border-radius: 50%;
-            pointer-events: none;
-            animation: float-particle 3s linear infinite;
-        }
-
-        @keyframes float-particle {
-            0% {
-                transform: translateY(0) translateX(0);
-                opacity: 0;
-            }
-
-            10% {
-                opacity: 1;
-            }
-
-            90% {
-                opacity: 1;
-            }
-
-            100% {
-                transform: translateY(-100vh) translateX(50px);
-                opacity: 0;
-            }
-        }
-
         /* Copyright Footer */
         .copyright-footer {
             margin-top: 2rem;
@@ -198,14 +168,90 @@
             color: #00f5ff;
             font-weight: 600;
         }
+
+        /* Round Starting Notification Modal */
+        .notification-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .notification-modal.hidden {
+            display: none;
+        }
+
+        .notification-content {
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            color: #00f5ff;
+            animation: zoomIn 0.5s ease;
+            padding: 2rem;
+        }
+
+        .notification-content h2 {
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            margin-bottom: 1rem;
+            text-shadow: 0 0 20px #00f5ff;
+        }
+
+        .notification-content p {
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            color: #fff;
+            margin-bottom: 2rem;
+        }
+
+        .countdown {
+            font-size: clamp(3rem, 10vw, 5rem);
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 30px #9333ea;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        @keyframes zoomIn {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Mobile optimization */
+        @media (max-width: 768px) {
+            .bubbler-header {
+                padding: 2rem 1rem;
+            }
+
+            .bubbler-footer {
+                padding: 1.5rem 1rem;
+            }
+
+            .stat-value {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Tablet optimization */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .bubbler-stats {
+                gap: 2rem;
+            }
+        }
     </style>
 </head>
 
-<body class="no-select">
-
-    <div class="bg-grid"></div>
-    <div class="bg-glow"></div>
-
+<body>
     <div class="bubbler-container">
         <canvas class="bubbler-canvas" id="bubbler-canvas"></canvas>
 
@@ -217,7 +263,7 @@
 
             <div class="bubbler-footer">
                 <div class="bubbler-instruction">
-                    ✨ Click anywhere to create bubbles ✨
+                    ✨ Click or tap to create bubbles ✨
                 </div>
                 <div class="bubbler-stats">
                     <div class="stat-item">
@@ -250,77 +296,290 @@
         </div>
     </div>
 
-    <style>
-        .notification-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-        }
-
-        .notification-modal.hidden {
-            display: none;
-        }
-
-        .notification-content {
-            text-align: center;
-            font-family: 'Orbitron', sans-serif;
-            color: #00f5ff;
-            animation: zoomIn 0.5s ease;
-        }
-
-        .notification-content h2 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            text-shadow: 0 0 20px #00f5ff;
-        }
-
-        .notification-content p {
-            font-size: 1.2rem;
-            color: #fff;
-            margin-bottom: 2rem;
-        }
-
-        .countdown {
-            font-size: 5rem;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 0 0 30px #9333ea;
-        }
-
-        @keyframes zoomIn {
-            from {
-                transform: scale(0.5);
-                opacity: 0;
-            }
-
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-    </style>
-
     <script>
         /**
          * Interactive Bubbler - Waiting Room Entertainment
-         * Participants can click to create bubbles and interact while waiting for quiz to start
+         * Enhanced with better performance and visuals
          */
-        // Save Team ID for Round 1
-        const teamId = "{{ team_id }}";
-        if (teamId && teamId !== "None") {
-            localStorage.setItem('teamId', teamId);
-        }
+
+        // Canvas setup
+        const canvas = document.getElementById('bubbler-canvas');
+        const ctx = canvas.getContext('2d');
+        let dpr = window.devicePixelRatio || 1;
+        let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+        // Game variables
+        let bubbles = [];
+        let particles = [];
+        let stats = {
+            bubbleCount: 0,
+            poppedCount: 0,
+            score: 0
+        };
 
         // Game Status Polling
         let isRedirecting = false;
 
+        // Enhanced Bubble Class
+        class Bubble {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = Math.random() * 40 + 20;
+                this.maxRadius = this.radius;
+                this.speedY = -(Math.random() * 0.8 + 0.4);
+                this.speedX = (Math.random() - 0.5) * 0.8;
+                this.opacity = 1;
+                this.hue = Math.random() * 60 + 180;
+                this.saturation = 90;
+                this.lightness = 70;
+                this.wobble = Math.random() * Math.PI * 2;
+                this.wobbleSpeed = Math.random() * 0.03 + 0.01;
+                this.growing = true;
+                this.growthRate = 0.5;
+                this.popped = false;
+                this.popAnimation = 0;
+                this.glowIntensity = Math.random() * 0.5 + 0.5;
+                this.particles = [];
+                this.createdAt = Date.now();
+                this.lifespan = 20000; // 20 seconds
+            }
+
+            update() {
+                const now = Date.now();
+                if (now - this.createdAt > this.lifespan) {
+                    this.opacity -= 0.02;
+                }
+
+                if (this.popped) {
+                    this.popAnimation += 0.15;
+                    this.radius += 3;
+                    this.opacity -= 0.08;
+
+                    // Update pop particles
+                    this.particles.forEach(p => {
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.vy += 0.1; // gravity
+                        p.life -= 0.02;
+                    });
+                    this.particles = this.particles.filter(p => p.life > 0);
+
+                    return this.opacity > 0 || this.particles.length > 0;
+                }
+
+                if (this.growing) {
+                    this.radius += this.growthRate;
+                    if (this.radius >= this.maxRadius) {
+                        this.growing = false;
+                    }
+                }
+
+                // Movement with easing
+                this.y += this.speedY;
+                this.x += this.speedX + Math.sin(this.wobble) * 0.3;
+                this.wobble += this.wobbleSpeed;
+
+                // Boundary bounce
+                if (this.x - this.radius < 0 || this.x + this.radius > canvas.width) {
+                    this.speedX *= -0.8;
+                    this.x = Math.max(this.radius, Math.min(canvas.width - this.radius, this.x));
+                }
+
+                // Fade near top
+                if (this.y < canvas.height * 0.3) {
+                    this.opacity -= 0.005;
+                }
+
+                return this.opacity > 0 && this.y + this.radius > -50;
+            }
+
+            draw() {
+                if (this.opacity <= 0) return;
+
+                if (this.popped) {
+                    // Pop effect
+                    ctx.save();
+
+                    // Expanding ring
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = `hsla(${this.hue}, 100%, 70%, ${this.opacity * 0.7})`;
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+
+                    // Particles
+                    this.particles.forEach(p => {
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fillStyle = `hsla(${this.hue}, 100%, 70%, ${p.life})`;
+                        ctx.fill();
+                    });
+
+                    ctx.restore();
+                } else {
+                    ctx.save();
+
+                    // Outer glow
+                    const gradient = ctx.createRadialGradient(
+                        this.x, this.y, 0,
+                        this.x, this.y, this.radius * 1.5
+                    );
+                    gradient.addColorStop(0, `hsla(${this.hue}, ${this.saturation}%, 70%, ${this.opacity * 0.3 * this.glowIntensity})`);
+                    gradient.addColorStop(0.7, `hsla(${this.hue}, ${this.saturation}%, 60%, ${this.opacity * 0.1 * this.glowIntensity})`);
+                    gradient.addColorStop(1, `hsla(${this.hue}, ${this.saturation}%, 50%, 0)`);
+
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius * 1.5, 0, Math.PI * 2);
+                    ctx.fillStyle = gradient;
+                    ctx.fill();
+
+                    // Main bubble
+                    const bubbleGradient = ctx.createRadialGradient(
+                        this.x - this.radius * 0.3, this.y - this.radius * 0.3, 0,
+                        this.x, this.y, this.radius
+                    );
+                    bubbleGradient.addColorStop(0, `hsla(${this.hue}, ${this.saturation}%, 90%, ${this.opacity * 0.9})`);
+                    bubbleGradient.addColorStop(0.4, `hsla(${this.hue}, ${this.saturation}%, 70%, ${this.opacity * 0.6})`);
+                    bubbleGradient.addColorStop(1, `hsla(${this.hue}, ${this.saturation}%, 50%, ${this.opacity * 0.3})`);
+
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = bubbleGradient;
+                    ctx.fill();
+
+                    // Highlight
+                    ctx.beginPath();
+                    const highlightSize = this.radius * 0.25;
+                    ctx.arc(this.x - this.radius * 0.2, this.y - this.radius * 0.2, highlightSize, 0, Math.PI * 2);
+                    const highlightGradient = ctx.createRadialGradient(
+                        this.x - this.radius * 0.2, this.y - this.radius * 0.2, 0,
+                        this.x - this.radius * 0.2, this.y - this.radius * 0.2, highlightSize
+                    );
+                    highlightGradient.addColorStop(0, `rgba(255, 255, 255, ${this.opacity * 0.8})`);
+                    highlightGradient.addColorStop(1, `rgba(255, 255, 255, 0)`);
+                    ctx.fillStyle = highlightGradient;
+                    ctx.fill();
+
+                    // Rim
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = `hsla(${this.hue}, 100%, 95%, ${this.opacity * 0.5})`;
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+
+                    ctx.restore();
+                }
+            }
+
+            isClicked(x, y) {
+                const dist = Math.hypot(x - this.x, y - this.y);
+                return dist < this.radius;
+            }
+
+            pop() {
+                if (!this.popped) {
+                    this.popped = true;
+
+                    // Create pop particles
+                    for (let i = 0; i < 12; i++) {
+                        const angle = (Math.PI * 2 * i) / 12;
+                        const speed = Math.random() * 3 + 2;
+                        this.particles.push({
+                            x: this.x,
+                            y: this.y,
+                            vx: Math.cos(angle) * speed,
+                            vy: Math.sin(angle) * speed - 2,
+                            size: Math.random() * 3 + 2,
+                            life: 1
+                        });
+                    }
+
+                    stats.poppedCount++;
+                    stats.score += Math.floor(this.maxRadius * 2);
+                    updateStats();
+
+                    // Pop sound effect (optional - uncomment if you want sound)
+                    // playPopSound();
+
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        // Background Particles Class
+        class BackgroundParticle {
+            constructor() {
+                this.reset();
+                this.y = Math.random() * canvas.height;
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + 10;
+                this.speed = Math.random() * 1.5 + 0.5;
+                this.opacity = Math.random() * 0.4 + 0.1;
+                this.size = Math.random() * 2.5 + 0.5;
+                this.wave = Math.random() * Math.PI * 2;
+                this.waveSpeed = Math.random() * 0.02 + 0.01;
+                this.waveAmplitude = Math.random() * 2 + 1;
+            }
+
+            update() {
+                this.y -= this.speed;
+                this.x += Math.sin(this.wave) * this.waveAmplitude;
+                this.wave += this.waveSpeed;
+                return this.y > -10;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(0, 245, 255, ${this.opacity})`;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Canvas resizing with high DPI support
+        function resizeCanvas() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            dpr = window.devicePixelRatio || 1;
+
+            // Set display size
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+
+            // Set actual size in memory (scaled for high DPI)
+            canvas.width = Math.floor(width * dpr);
+            canvas.height = Math.floor(height * dpr);
+
+            // Normalize coordinate system to use CSS pixels
+            ctx.scale(dpr, dpr);
+        }
+
+        // Stats update
+        function updateStats() {
+            document.getElementById('bubble-count').textContent = stats.bubbleCount;
+            document.getElementById('popped-count').textContent = stats.poppedCount;
+            document.getElementById('score-count').textContent = stats.score;
+        }
+
+        // Spawn ambient bubbles
+        function spawnAmbientBubble() {
+            if (bubbles.length < (isMobile ? 30 : 50)) { // Limit bubbles for performance
+                const x = Math.random() * canvas.width;
+                const y = canvas.height + 50;
+                bubbles.push(new Bubble(x, y));
+                stats.bubbleCount++;
+                updateStats();
+            }
+        }
+
+        // Game Status Polling Functions
         async function checkGameStatus() {
             if (isRedirecting) return;
 
@@ -331,30 +590,22 @@
                 if (data.round_status === 'ONGOING' && data.active_round === 1) {
                     if (!data.is_submitted) {
                         startRedirectSequence(1);
-                    } else {
-                        console.log("Round 1 ongoing but already submitted.");
                     }
                 } else if (data.round_status === 'ONGOING' && data.active_round === 2) {
                     if (!data.is_submitted) {
                         if (data.is_qualified) {
                             startRedirectSequence(2);
                         } else {
-                            // Disqualified - Redirect to Eliminated Page
                             window.location.href = `/eliminated/?score=${data.last_score}&rank=${data.rank}&total=${data.total_score}&round=1&team=${encodeURIComponent(data.team_name || '')}`;
                         }
-                    } else {
-                        console.log("Round 2 ongoing but already submitted.");
                     }
                 } else if (data.round_status === 'ONGOING' && data.active_round === 3) {
                     if (data.is_qualified) {
-                        // Direct redirect for Round 3 (Berserk Mode)
                         window.location.href = '/round-3/';
                     } else {
-                        // Disqualified from R2 -> R3
                         window.location.href = `/eliminated/?score=${data.last_score}&rank=${data.rank}&total=${data.total_score}&round=2&team=${encodeURIComponent(data.team_name || '')}`;
                     }
                 }
-                // Future expansion for Round 2, 3...
             } catch (error) {
                 console.error("Polling error:", error);
             }
@@ -382,225 +633,9 @@
             }, 1000);
         }
 
-        // Poll every 3 seconds
-        setInterval(checkGameStatus, 3000);
-
-        const canvas = document.getElementById('bubbler-canvas');
-        function resizeCanvas() {
-            const parent = canvas.parentElement;
-            const width = parent.clientWidth;
-            const height = parent.clientHeight;
-
-            // Get the device pixel ratio (usually 2 or 3 on mobile)
-            const dpr = window.devicePixelRatio || 1;
-
-            // 1. Set the visual size (CSS pixels)
-            canvas.style.width = width + 'px';
-            canvas.style.height = height + 'px';
-
-            // 2. Set the internal buffer size (Physical pixels)
-            canvas.width = width * dpr;
-            canvas.height = height * dpr;
-
-            // 3. Normalize the coordinate system
-            // This allows you to draw using logical CSS pixels (0 to width) 
-            // while the browser handles the high-res rendering.
-            ctx.scale(dpr, dpr);
-        }
-
-        // Initial call
-        resizeCanvas();
-
-        // Handle resizing (debounced slightly to prevent mobile stutter)
-        let resizeTimeout;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(resizeCanvas, 100);
-        });
-        // Set canvas size
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-
-        // Stats
-        let stats = {
-            bubbleCount: 0,
-            poppedCount: 0,
-            score: 0
-        };
-
-        // Bubble class
-        class Bubble {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.radius = Math.random() * 40 + 20; // 20-60px
-                this.maxRadius = this.radius;
-                this.speedY = -(Math.random() * 0.8 + 0.4); // Slower upward float
-                this.speedX = (Math.random() - 0.5) * 0.8; // Reduced horizontal drift
-                this.opacity = 1;
-                this.hue = Math.random() * 60 + 180; // Blue-cyan range
-                this.wobble = Math.random() * Math.PI * 2;
-                this.wobbleSpeed = Math.random() * 0.03 + 0.01; // Slower wobble
-                this.growing = true;
-                this.growthRate = 0.5;
-                this.popped = false;
-                this.popAnimation = 0;
-                this.glowIntensity = Math.random() * 0.5 + 0.5;
-            }
-
-            update() {
-                if (this.popped) {
-                    // Pop animation
-                    this.popAnimation += 0.15;
-                    this.radius += 3;
-                    this.opacity -= 0.08;
-                    return this.opacity > 0;
-                }
-
-                // Growth phase
-                if (this.growing) {
-                    this.radius += this.growthRate;
-                    if (this.radius >= this.maxRadius) {
-                        this.growing = false;
-                    }
-                }
-
-                // Movement
-                this.y += this.speedY;
-                this.x += this.speedX + Math.sin(this.wobble) * 0.5;
-                this.wobble += this.wobbleSpeed;
-
-                // Fade out as it rises
-                if (this.y < canvas.height * 0.3) {
-                    this.opacity -= 0.005;
-                }
-
-                // Boundary check
-                if (this.x - this.radius < 0 || this.x + this.radius > canvas.width) {
-                    this.speedX *= -0.8;
-                }
-
-                return this.opacity > 0 && this.y + this.radius > 0;
-            }
-
-            draw() {
-                ctx.save();
-
-                if (this.popped) {
-                    // Pop effect - expanding ring
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                    ctx.strokeStyle = `hsla(${this.hue}, 100%, 70%, ${this.opacity})`;
-                    ctx.lineWidth = 3;
-                    ctx.stroke();
-
-                    // Particles
-                    for (let i = 0; i < 8; i++) {
-                        const angle = (Math.PI * 2 * i) / 8;
-                        const dist = this.popAnimation * 20;
-                        const px = this.x + Math.cos(angle) * dist;
-                        const py = this.y + Math.sin(angle) * dist;
-                        ctx.beginPath();
-                        ctx.arc(px, py, 3, 0, Math.PI * 2);
-                        ctx.fillStyle = `hsla(${this.hue}, 100%, 70%, ${this.opacity})`;
-                        ctx.fill();
-                    }
-                } else {
-                    // Outer glow
-                    const gradient = ctx.createRadialGradient(
-                        this.x, this.y, 0,
-                        this.x, this.y, this.radius * 1.5
-                    );
-                    gradient.addColorStop(0, `hsla(${this.hue}, 100%, 70%, ${this.opacity * 0.3 * this.glowIntensity})`);
-                    gradient.addColorStop(0.5, `hsla(${this.hue}, 100%, 60%, ${this.opacity * 0.1 * this.glowIntensity})`);
-                    gradient.addColorStop(1, `hsla(${this.hue}, 100%, 50%, 0)`);
-
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.radius * 1.5, 0, Math.PI * 2);
-                    ctx.fillStyle = gradient;
-                    ctx.fill();
-
-                    // Main bubble
-                    const bubbleGradient = ctx.createRadialGradient(
-                        this.x - this.radius * 0.3, this.y - this.radius * 0.3, 0,
-                        this.x, this.y, this.radius
-                    );
-                    bubbleGradient.addColorStop(0, `hsla(${this.hue}, 100%, 80%, ${this.opacity * 0.8})`);
-                    bubbleGradient.addColorStop(0.4, `hsla(${this.hue}, 100%, 60%, ${this.opacity * 0.5})`);
-                    bubbleGradient.addColorStop(1, `hsla(${this.hue}, 100%, 40%, ${this.opacity * 0.3})`);
-
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                    ctx.fillStyle = bubbleGradient;
-                    ctx.fill();
-
-                    // Highlight
-                    ctx.beginPath();
-                    ctx.arc(this.x - this.radius * 0.3, this.y - this.radius * 0.3, this.radius * 0.3, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity * 0.6})`;
-                    ctx.fill();
-
-                    // Rim
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                    ctx.strokeStyle = `hsla(${this.hue}, 100%, 90%, ${this.opacity * 0.4})`;
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                }
-
-                ctx.restore();
-            }
-
-            isClicked(mouseX, mouseY) {
-                const dist = Math.hypot(mouseX - this.x, mouseY - this.y);
-                return dist < this.radius;
-            }
-
-            pop() {
-                if (!this.popped) {
-                    this.popped = true;
-                    stats.poppedCount++;
-                    stats.score += Math.floor(this.maxRadius);
-                    updateStats();
-                    return true;
-                }
-                return false;
-            }
-        }
-
-        // Bubble management
-        let bubbles = [];
-        let mouseX = 0;
-        let mouseY = 0;
-        let autoSpawnInterval;
-
-        // Create ambient bubbles automatically
-        function spawnAmbientBubble() {
-            const x = Math.random() * canvas.width;
-            const y = canvas.height + 50;
-            bubbles.push(new Bubble(x, y));
-            stats.bubbleCount++;
-            updateStats();
-        }
-
-        // Start ambient spawning
-        autoSpawnInterval = setInterval(spawnAmbientBubble, 800);
-
-        // Mouse interaction
-        canvas.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-        });
-
-        canvas.addEventListener('click', (e) => {
-            const x = e.clientX;
-            const y = e.clientY;
-
-            // Check if clicked on existing bubble
+        // Event Handlers
+        function handleInteraction(x, y, isClick = false) {
+            // Check for bubble popping first
             let clickedBubble = false;
             for (let i = bubbles.length - 1; i >= 0; i--) {
                 if (bubbles[i].isClicked(x, y)) {
@@ -610,97 +645,116 @@
                 }
             }
 
-            // Create new bubble if not clicked on existing one
-            if (!clickedBubble) {
-                bubbles.push(new Bubble(x, y));
-                stats.bubbleCount++;
-                updateStats();
+            // Create new bubble if not popped and is a click
+            if (!clickedBubble && isClick) {
+                if (bubbles.length < (isMobile ? 35 : 60)) {
+                    bubbles.push(new Bubble(x, y));
+                    stats.bubbleCount++;
+                    updateStats();
+                }
             }
+        }
+
+        // Mouse events
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) * (canvas.width / dpr / rect.width);
+            const y = (e.clientY - rect.top) * (canvas.height / dpr / rect.height);
+            handleInteraction(x, y, true);
         });
 
-        // Touch support for mobile
+        // Touch events for mobile
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             const touch = e.touches[0];
-            const x = touch.clientX;
-            const y = touch.clientY;
+            const rect = canvas.getBoundingClientRect();
+            const x = (touch.clientX - rect.left) * (canvas.width / dpr / rect.width);
+            const y = (touch.clientY - rect.top) * (canvas.height / dpr / rect.height);
+            handleInteraction(x, y, true);
+        }, { passive: false });
 
-            let clickedBubble = false;
-            for (let i = bubbles.length - 1; i >= 0; i--) {
-                if (bubbles[i].isClicked(x, y)) {
-                    bubbles[i].pop();
-                    clickedBubble = true;
-                    break;
-                }
-            }
+        // Animation Loop
+        let lastTime = 0;
+        const fps = 60;
+        const frameInterval = 1000 / fps;
 
-            if (!clickedBubble) {
-                bubbles.push(new Bubble(x, y));
-                stats.bubbleCount++;
-                updateStats();
-            }
-        });
+        function animate(timestamp) {
+            requestAnimationFrame(animate);
 
-        // Update stats display
-        function updateStats() {
-            document.getElementById('bubble-count').textContent = stats.bubbleCount;
-            document.getElementById('popped-count').textContent = stats.poppedCount;
-            document.getElementById('score-count').textContent = stats.score;
-        }
+            const deltaTime = timestamp - lastTime;
+            if (deltaTime < frameInterval) return;
+            lastTime = timestamp - (deltaTime % frameInterval);
 
-        // Background particles
-        let particles = [];
-        function createParticle() {
-            const particle = {
-                x: Math.random() * canvas.width,
-                y: canvas.height,
-                speed: Math.random() * 1 + 0.5,
-                opacity: Math.random() * 0.5 + 0.3,
-                size: Math.random() * 2 + 1
-            };
-            particles.push(particle);
-        }
-
-        setInterval(createParticle, 200);
-
-        // Animation loop
-        function animate() {
-            // Clear with slight trail effect
+            // Clear canvas with trail effect
+            ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
             ctx.fillStyle = 'rgba(10, 14, 39, 0.1)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillRect(0, 0, canvas.width / dpr, canvas.height / dpr);
 
-            // Update and draw particles
+            // Update and draw background particles
+            if (particles.length < 100) {
+                particles.push(new BackgroundParticle());
+            }
+
             particles = particles.filter(p => {
-                p.y -= p.speed;
-                p.x += Math.sin(p.y * 0.01) * 0.5;
-
-                ctx.fillStyle = `rgba(0, 245, 255, ${p.opacity})`;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fill();
-
-                return p.y > -10;
+                const alive = p.update();
+                if (alive) p.draw();
+                return alive;
             });
 
             // Update and draw bubbles
             bubbles = bubbles.filter(bubble => {
                 const alive = bubble.update();
-                bubble.draw();
+                if (alive) bubble.draw();
                 return alive;
             });
-
-            requestAnimationFrame(animate);
         }
 
-        // Start animation
-        animate();
+        // Initialize
+        function init() {
+            resizeCanvas();
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+            });
 
-        // Initial ambient bubbles
-        for (let i = 0; i < 5; i++) {
-            setTimeout(() => {
-                spawnAmbientBubble();
-            }, i * 300);
+            // Start animation
+            animate(0);
+
+            // Start ambient spawning
+            setInterval(spawnAmbientBubble, isMobile ? 1200 : 800);
+
+            // Initial ambient bubbles
+            for (let i = 0; i < 8; i++) {
+                setTimeout(spawnAmbientBubble, i * 400);
+            }
+
+            // Start game status polling
+            checkGameStatus();
+            setInterval(checkGameStatus, 3000);
         }
+
+        // Start the application
+        init();
+
+        // Optional: Sound effects (uncomment if you want sounds)
+        /*
+        function playPopSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        }
+        */
     </script>
 </body>
 
