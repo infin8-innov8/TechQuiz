@@ -19,13 +19,24 @@ def get_questions_from_sheet():
     Expected Format: question | option 1 | option 2 | option 3 | option 4 | correct option
     Returns a list of dictionaries compatible with the frontend quizData.
     """
-    token_path = os.path.join(settings.BASE_DIR, 'token.json')
-    sys.stderr.write(f"DEBUG: Looking for token at: {token_path}\n")
-    
-    if not os.path.exists(token_path):
-        sys.stderr.write("DEBUG: token.json NOT FOUND!\n")
+    # Robust Path Finding
+    potential_paths = [
+        os.path.join(settings.BASE_DIR, 'token.json'),
+        os.path.join(os.path.dirname(settings.__file__), 'token.json'),
+        os.path.join(os.getcwd(), 'token.json'),
+    ]
+
+    token_path = None
+    for path in potential_paths:
+        sys.stderr.write(f"DEBUG: Checking path: {path}\n")
+        if os.path.exists(path):
+            token_path = path
+            sys.stderr.write(f"DEBUG: FOUND token.json at {token_path}!\n")
+            break
+            
+    if not token_path:
+        sys.stderr.write("DEBUG: token.json NOT FOUND in any expected location!\n")
         return []
-    sys.stderr.write("DEBUG: token.json FOUND!\n")
 
     try:
         creds = Credentials.from_authorized_user_file(token_path, SCOPES)
