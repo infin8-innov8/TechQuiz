@@ -7,16 +7,20 @@ import traceback
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 SHEET_ID = '1IghZ1CnPgvlZQCej6ev1oFhyIVKbwdbD71ULY2hA2tM'
 
+from django.conf import settings
+
 def get_round2_questions():
     """
     Fetches questions from the Round 2 Google Sheet.
     Format: question | option 1 | option 2 | option 3 | option 4 | correct option number
     """
-    if not os.path.exists('token.json'):
+    token_path = os.path.join(settings.BASE_DIR, 'token.json')
+
+    if not os.path.exists(token_path):
         return []
 
     try:
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+        creds = Credentials.from_authorized_user_file(token_path, SCOPES)
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
             

@@ -7,6 +7,8 @@ import traceback
 
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
+from django.conf import settings
+
 def get_questions_from_sheet():
     # ... (start of function)
 
@@ -15,11 +17,13 @@ def get_questions_from_sheet():
     Expected Format: question | option 1 | option 2 | option 3 | option 4 | correct option
     Returns a list of dictionaries compatible with the frontend quizData.
     """
-    if not os.path.exists('token.json'):
+    token_path = os.path.join(settings.BASE_DIR, 'token.json')
+    
+    if not os.path.exists(token_path):
         return []
 
     try:
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+        creds = Credentials.from_authorized_user_file(token_path, SCOPES)
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
             
