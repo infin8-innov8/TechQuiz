@@ -9,6 +9,8 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
 from django.conf import settings
 
+import sys
+
 def get_questions_from_sheet():
     # ... (start of function)
 
@@ -18,9 +20,12 @@ def get_questions_from_sheet():
     Returns a list of dictionaries compatible with the frontend quizData.
     """
     token_path = os.path.join(settings.BASE_DIR, 'token.json')
+    sys.stderr.write(f"DEBUG: Looking for token at: {token_path}\n")
     
     if not os.path.exists(token_path):
+        sys.stderr.write("DEBUG: token.json NOT FOUND!\n")
         return []
+    sys.stderr.write("DEBUG: token.json FOUND!\n")
 
     try:
         creds = Credentials.from_authorized_user_file(token_path, SCOPES)
