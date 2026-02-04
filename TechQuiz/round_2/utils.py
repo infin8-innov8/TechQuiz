@@ -14,9 +14,21 @@ def get_round2_questions():
     Fetches questions from the Round 2 Google Sheet.
     Format: question | option 1 | option 2 | option 3 | option 4 | correct option number
     """
-    token_path = os.path.join(settings.BASE_DIR, 'token.json')
+    # Robust Path Finding
+    potential_paths = [
+        os.path.join(settings.BASE_DIR, 'token.json'),
+        os.path.join(settings.BASE_DIR, 'TechQuiz', 'token.json'), # Check inner folder explicitly
+        os.path.join(os.getcwd(), 'token.json'),
+    ]
 
-    if not os.path.exists(token_path):
+    token_path = None
+    for path in potential_paths:
+        if os.path.exists(path):
+            token_path = path
+            break
+            
+    if not token_path:
+        print("DEBUG: token.json NOT FOUND in Round 2 utils!")
         return []
 
     try:

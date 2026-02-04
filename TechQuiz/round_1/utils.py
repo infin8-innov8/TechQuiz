@@ -22,7 +22,7 @@ def get_questions_from_sheet():
     # Robust Path Finding
     potential_paths = [
         os.path.join(settings.BASE_DIR, 'token.json'),
-        os.path.join(os.path.dirname(settings.__file__), 'token.json'),
+        os.path.join(settings.BASE_DIR, 'TechQuiz', 'token.json'), # Check inner folder explicitly
         os.path.join(os.getcwd(), 'token.json'),
     ]
 
