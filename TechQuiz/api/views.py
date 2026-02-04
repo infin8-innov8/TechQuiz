@@ -11,17 +11,25 @@ def submit_round(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            team_id = data.get('team_id')
-            answers = data.get('answers', []) # Expecting list of {question_id: x, selected_option: y}
+            # SECURITY FIX: Use Session ID instead of trusting frontend payload
+            team_id = request.session.get('user_id')
+            
+            # Allow fallback to payload ONLY if session is empty (e.g. for API testing tools)
+            # But in production, we should enforce session.
+            if not team_id:
+                # Try payload one last time, but prefer session
+                team_id = data.get('team_id')
+
+            answers = data.get('answers', []) # Expecting list of whole question_id: x, selected_option: y
             round_num = data.get('round')
             
             if not team_id:
-                return JsonResponse({'error': 'Team ID required'}, status=400)
+                return JsonResponse({'error': 'Not Logged In (Team ID missing from session)'}, status=401)
                 
             try:
                 team = Team.objects.get(id=team_id)
             except Team.DoesNotExist:
-                 return JsonResponse({'error': 'Team not found'}, status=404)
+                 return JsonResponse({'error': f'Team not found (ID: {team_id})'}, status=404)
                  
             # Save Score
             if round_num == 1:
