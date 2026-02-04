@@ -83,6 +83,26 @@ def login_view(request):
 
 def verify_otp(request):
     if request.method == 'POST':
+        # Check for Resend Request
+        if request.POST.get('resend') == 'true':
+            email = request.session.get('auth_email')
+            if email:
+                otp = str(random.randint(100000, 999999))
+                request.session['auth_otp'] = otp
+                try:
+                    send_mail(
+                        'TechQuiz Login OTP (Resent)',
+                        f'Your new OTP for TechQuiz Login is: {otp}',
+                        settings.EMAIL_HOST_USER,
+                        [email],
+                        fail_silently=False,
+                    )
+                    return HttpResponse("OTP Resent")
+                except Exception as e:
+                    print(f"Resend Error: {e}")
+                    return HttpResponse("Error sending email", status=500)
+            return HttpResponse("Session expired", status=400)
+
         user_otp = request.POST.get('otp')
         session_otp = request.session.get('auth_otp')
         

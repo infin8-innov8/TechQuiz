@@ -629,22 +629,29 @@
 
         const API_BASE_URL = '/api';
 
-        async function submitQuiz() {
+        async function submitQuiz(isMalpractice = false, malpracticeReason = "") {
             clearInterval(state.timerInterval);
 
             // Disable UI
             document.body.style.pointerEvents = 'none';
             const submitText = document.getElementById('question-text');
-            if (submitText) submitText.textContent = "Submitting answers to server...";
+            if (submitText) submitText.textContent = isMalpractice ? `Malpractice Detected (${malpracticeReason})! Auto-submitting...` : "Submitting answers to server...";
+
+            // MANDATORY CHECK (Only for manual submission)
+            if (!isMalpractice) {
+                const totalAnswered = Object.keys(state.answers).length;
+                if (totalAnswered < TOTAL_QUESTIONS) {
+                    alert(`You must answer ALL ${TOTAL_QUESTIONS} questions before submitting!\nYou have answered ${totalAnswered}.`);
+                    document.body.style.pointerEvents = 'auto'; // Re-enable
+                    if (submitText) submitText.textContent = quizData[state.currentQuestion].q; // Restore text
+                    // Hide modal if open
+                    elements.confirmModal.classList.add('hidden');
+                    return;
+                }
+            }
 
             const teamId = localStorage.getItem('teamId');
-            if (!teamId) {
-                // For now, if no local storage, we might just alert, or assume session based auth is enough if we change logic
-                // But preserving user logic:
-                // alert("Error: Team ID not found. Please login again.");
-                // window.location.href = 'login.html';
-                // return;
-            }
+            // ID will be grabbed from session in backend anyway, but we keep this flow.
 
             // PREPARE ANSWERS PAYLOAD
             const answersList = [];
@@ -659,13 +666,17 @@
             });
 
             const payload = {
-                team_id: teamId,
-                answers: answersList, // Sending raw answers
-                round: 1
+                team_id: teamId, // Optional now as backend uses session
+                answers: answersList,
+                round: 1,
+                is_malpractice: isMalpractice,
+                malpractice_reason: malpracticeReason
             };
 
             try {
-                // Using a relative path that we will define in urls.py
+                // Using sendBeacon for reload/close events if robust, but fetch is fine for tab switch
+                // For critical unload, we might try sendBeacon but we need to format data as Blob/FormData
+
                 const response = await fetch(`/api/quiz/submit_round/`, {
                     method: 'POST',
                     headers: {
@@ -680,23 +691,35 @@
                 if (response.ok) {
                     // Save Qualification Status
                     localStorage.setItem('isQualified', data.qualified ? 'true' : 'false');
-                    localStorage.setItem('round1_score', data.score); // Save verified score
+                    localStorage.setItem('round1_score', data.score);
 
                     // Clear state
                     const keysToRemove = ['answers', 'review', 'timer', 'current'];
                     keysToRemove.forEach(k => localStorage.removeItem(STORAGE_PREFIX + k));
 
                     // Redirect
-                    window.location.href = '/waiting-room/'; // Redirect back to waiting room
+                    window.location.href = '/waiting-room/';
                 } else {
                     alert(`Submission Failed: ${data.error || 'Unknown error'}`);
+                    // If malpractice, we force redirect anyway? No, maybe server error.
+                    // But if it's malpractice, we probably want to kick them out or ensure submission.
+                    if (isMalpractice) window.location.href = '/waiting-room/';
                     document.body.style.pointerEvents = 'auto';
                 }
             } catch (error) {
                 console.error('Network Error:', error);
+                if (isMalpractice) window.location.href = '/waiting-room/';
                 alert('Network Error. Please ensure backend is running.');
                 document.body.style.pointerEvents = 'auto';
             }
+        }
+
+        function handleMalpractice(reason) {
+            // Prevent multiple triggers
+            if (state.submitted) return;
+            state.submitted = true; // Flag to prevent double submit
+            alert(`Malpractice Detected: ${reason}.\nYour test is being auto-submitted.`);
+            submitQuiz(true, reason);
         }
 
         function attachEventListeners() {
@@ -704,7 +727,7 @@
             elements.closeGrid.onclick = () => elements.gridModal.classList.add('hidden');
             elements.submitBtn.onclick = () => elements.confirmModal.classList.remove('hidden');
             elements.cancelSubmit.onclick = () => elements.confirmModal.classList.add('hidden');
-            elements.confirmSubmit.onclick = submitQuiz;
+            elements.confirmSubmit.onclick = () => submitQuiz(false); // Manual submit
             elements.prevBtn.onclick = () => { if (state.currentQuestion > 0) loadQuestion(--state.currentQuestion); };
             elements.nextBtn.onclick = () => {
                 if (state.currentQuestion < TOTAL_QUESTIONS - 1) loadQuestion(++state.currentQuestion);
@@ -714,21 +737,67 @@
                 const idx = state.reviewMarked.indexOf(state.currentQuestion);
                 if (idx > -1) state.reviewMarked.splice(idx, 1);
                 else state.reviewMarked.push(state.currentQuestion);
-
-                // Save review state immediately before navigating
                 saveState();
-
-                // Auto-navigate to next question if available
                 if (state.currentQuestion < TOTAL_QUESTIONS - 1) {
                     loadQuestion(++state.currentQuestion);
                 } else {
-                    // Update grid to reflect review status even if we stay on last question
                     updateQuestionGrid();
-                    // Optional: Show submit modal if it's the last question? 
-                    // elements.confirmModal.classList.remove('hidden');
                 }
             };
+
+            // --- MALPRACTICE LISTENERS ---
+
+            // 1. Tab Switch / Minimize
+            document.addEventListener("visibilitychange", () => {
+                if (document.visibilityState === 'hidden') {
+                    handleMalpractice("Tab Switch / Minimize");
+                }
+            });
+
+            // 2. Window Blur (Alt+Tab, clicking outside) -> Warning: This can be sensitive.
+            // User rules said "switches tabs... or refresh". Blur captures tab switching too.
+            // But sometimes false positives (notifications). VisibilityChange is safer for Tabs.
+            // Only add Blur if strictly required. "switches tabs" is covered by visibilitychange.
+            // "hits back" -> Popstate.
+
+            // 3. Back Button Prevention & Detection
+            history.pushState(null, null, location.href);
+            window.addEventListener('popstate', () => {
+                history.pushState(null, null, location.href); // Push again to stay
+                handleMalpractice("Back Button Used");
+            });
+
+            // 4. Refresh / Close (beforeunload)
+            // Note: We cannot easily "stop" it, but we can try to send data.
+            // A reliable way is to save state and let server handle 'disconnection' or
+            // purely rely on client side triggers.
+            window.addEventListener('beforeunload', (e) => {
+                // If not properly submitting, treat as malpractice?
+                // Browser shows prompt. If they leave, we can't run async fetch easily.
+                // We'll use this just to warn.
+                // But user said "refresh... auto submitted".
+                // We can try navigator.sendBeacon in 'unload'.
+            });
         }
+
+        // Handle Unload for Refresh/Close
+        window.addEventListener('unload', () => {
+            if (!state.submitted) {
+                // Try to auto-submit via Beacon (Payload must be text/blob)
+                // NOTE: SendBeacon is limited. We'll simplify payload.
+                const teamId = localStorage.getItem('teamId');
+                const payload = JSON.stringify({
+                    team_id: teamId,
+                    answers: [], // Can't easily serialize current answers synchronously in a reliable way for all browsers without preparation
+                    // But we can try relying on the state variable if updated.
+                    round: 1,
+                    is_malpractice: true,
+                    malpractice_reason: "Page Refresh/Close"
+                });
+                const blob = new Blob([payload], { type: 'application/json' });
+                navigator.sendBeacon('/api/quiz/submit_round/', blob);
+            }
+        });
 
         window.addEventListener('DOMContentLoaded', initQuiz);
 

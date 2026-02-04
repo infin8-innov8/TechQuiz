@@ -250,7 +250,7 @@ def get_leaderboard(request):
                             'rank': rank,
                             'team_name': log.team.team_name,
                             'score': 'LOGGED',
-                            'timestamp': log.timestamp.strftime('%H:%M:%S.%f')[:-3]
+                            'timestamp': timezone.localtime(log.timestamp).strftime('%H:%M:%S.%f')[:-3]
                         })
                         seen_teams.add(log.team_id)
                         rank += 1
