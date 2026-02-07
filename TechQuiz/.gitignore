@@ -15,6 +15,7 @@ db.sqlite3-journal
 
 # Virtual Environments
 .venv/
+.venv3.11/
 env/
 venv/
 ENV/
@@ -25,3 +26,4 @@ ENV/
 .DS_Store
 round1questions.ods
 token.json
+kyes.json
