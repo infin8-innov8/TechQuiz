@@ -9,34 +9,49 @@ SHEET_ID = '1IghZ1CnPgvlZQCej6ev1oFhyIVKbwdbD71ULY2hA2tM'
 
 from django.conf import settings
 
+import sys
+
 def get_round2_questions():
     """
     Fetches questions from the Round 2 Google Sheet.
     Format: question | option 1 | option 2 | option 3 | option 4 | correct option number
     """
-    # Robust Path Finding
-    potential_paths = [
-        os.path.join(settings.BASE_DIR, 'token.json'),
-        os.path.join(settings.BASE_DIR, 'TechQuiz', 'token.json'), # Check inner folder explicitly
-        os.path.join(os.getcwd(), 'token.json'),
-    ]
-
-    token_path = None
-    for path in potential_paths:
-        if os.path.exists(path):
-            token_path = path
-            break
-            
-    if not token_path:
-        print("DEBUG: token.json NOT FOUND in Round 2 utils!")
-        return []
-
     try:
-        creds = Credentials.from_authorized_user_file(token_path, SCOPES)
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-            
-        client = gspread.authorize(creds)
+        # Service Account Path
+        service_account_path = os.path.join(settings.BASE_DIR, 'service_account.json')
+        client = None
+        
+        if os.path.exists(service_account_path):
+            try:
+                client = gspread.service_account(filename=service_account_path)
+                sys.stderr.write(f"DEBUG: Authenticated with Service Account at {service_account_path}\n")
+            except Exception as e:
+                sys.stderr.write(f"DEBUG: Service Account auth failed: {e}\n")
+                client = None
+        
+        if not client:
+            # Robust Path Finding for fallback token.json
+            potential_paths = [
+                os.path.join(settings.BASE_DIR, 'token.json'),
+                os.path.join(settings.BASE_DIR, 'TechQuiz', 'token.json'), 
+                os.path.join(os.getcwd(), 'token.json'),
+            ]
+
+            token_path = None
+            for path in potential_paths:
+                if os.path.exists(path):
+                    token_path = path
+                    break
+                    
+            if not token_path:
+                sys.stderr.write("DEBUG: token.json NOT FOUND and service_account.json missing in Round 2!\n")
+                return []
+
+            creds = Credentials.from_authorized_user_file(token_path, SCOPES)
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+                
+            client = gspread.authorize(creds)
         
         try:
             sheet = client.open_by_key(SHEET_ID).sheet1
@@ -60,7 +75,7 @@ def get_round2_questions():
             question_text = row[0]
             options = [row[1], row[2], row[3], row[4]]
             
-            # Robust correct answer parsing (same logic as Round 1)
+            # Robust correct answer parsing
             correct_val = row[5].strip()
             correct_idx = 0
             

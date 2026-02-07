@@ -19,7 +19,7 @@ db.sqlite3-journal
 env/
 venv/
 ENV/
-
+service_account.json
 # IDEs
 .vscode/
 .idea/

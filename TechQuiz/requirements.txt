@@ -3,15 +3,12 @@ asgiref
 sqlparse
 pytz
 typing_extensions
-
 python-dotenv
-
 requests
 urllib3
 idna
 certifi
 chardet
-
 google-api-core
 google-api-python-client
 google-auth

@@ -15,7 +15,7 @@ def setup_auth():
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                'Keys.json', SCOPES)
+                'keys.json', SCOPES)
             # Manual console flow
             flow.redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
             auth_url, _ = flow.authorization_url(prompt='consent')
