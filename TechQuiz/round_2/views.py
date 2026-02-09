@@ -8,6 +8,7 @@ import json
 def round_2_view(request):
     # Custom Session Authentication Check
     if 'user_id' not in request.session:
+        print("DEBUG: Redirecting to waiting_room because user_id NOT in session.")
         return redirect('waiting_room')
 
     # Game State Validation

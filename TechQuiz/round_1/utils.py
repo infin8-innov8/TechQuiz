@@ -78,7 +78,10 @@ def get_questions_from_sheet():
             if len(row) < 6:
                 continue
                 
-            question_text = row[0]
+            question_text = row[0].strip()
+            if not question_text: # Skip empty rows
+                continue
+
             options = [row[1], row[2], row[3], row[4]]
             correct_val = row[5].strip() 
             

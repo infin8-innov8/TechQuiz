@@ -72,7 +72,10 @@ def get_round2_questions():
             if len(row) < 6:
                 continue
                 
-            question_text = row[0]
+            question_text = row[0].strip()
+            if not question_text: # Skip empty rows
+                continue
+
             options = [row[1], row[2], row[3], row[4]]
             
             # Robust correct answer parsing
