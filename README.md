@@ -6,11 +6,6 @@
 
 [![Official Site](https://img.shields.io/badge/Club-TIC_Matrix-FF5722?style=for-the-badge)](https://tic-official.netlify.app/)
 
-[![GitHub stars](https://img.shields.io/github/stars/PranavVasankar/tic-matrix?style=for-the-badge)](https://github.com/PranavVasankar/tic-matrix/stargazers)
-
-[![GitHub issues](https://img.shields.io/github/issues/PranavVasankar/tic-matrix?style=for-the-badge)](https://github.com/PranavVasankar/tic-matrix/issues)
-
-[![GitHub license](https://img.shields.io/github/license/PranavVasankar/tic-matrix?style=for-the-badge)](LICENSE)
 
 **A high-concurrency, full-stack event application featuring real-time synchronization and microsecond-accurate data processing.**
 
