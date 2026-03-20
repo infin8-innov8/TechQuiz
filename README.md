@@ -55,14 +55,14 @@ TechQuiz is a robust, full-stack web application designed for The Innovators and
 
 1.  **Clone the repository**
     ```bash
-    git clone [https://github.com/PranavVasankar/tic-matrix.git](https://github.com/PranavVasankar/tic-matrix.git)
-    cd tic-matrix
+    git clone https://github.com/infin8-innov8/TechQuiz
+    cd TechQuiz/TechQuiz
     ```
 
 2.  **Set up the virtual environment**
     ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows use: venv\Scripts\activate
+    python3 -m venv .venv # ON windows use: python -m venv .venv
+    source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
     ```
 
 3.  **Install dependencies**
@@ -71,10 +71,12 @@ TechQuiz is a robust, full-stack web application designed for The Innovators and
     ```
 
 4.  **Configure environment variables**
-    Create a `.env` file in the root directory:
+    Create a `.env` file in :
     ```env
-    SECRET_KEY=your_secret_key
-    GOOGLE_SHEETS_CREDENTIALS=path/to/your/credentials.json
+    SECRET_KEY= your_secret_key
+    DEBUG = Flase or True
+    EMAIL_HOST_USER= your_email
+    EMAIL_HOST_PASSWORD= your_email_app_passowrd                                     
     ```
 
 5.  **Run migrations and start the server**
@@ -86,15 +88,78 @@ TechQuiz is a robust, full-stack web application designed for The Innovators and
 ## 📁 Project Structure
 
 ```text
-tic-matrix/
-├── .gitignore
-├── requirements.txt       # Python dependencies
-├── manage.py              # Django execution script
-├── core/                  # Main project settings and routing
-│   ├── settings.py
-│   └── urls.py
-└── quiz_app/              # Core application logic
-    ├── models.py          # Database models for users/scores
-    ├── views.py           # Buzzer logic and Google Sheets data fetching
-    ├── templates/         # HTML structure for the UI
-    └── static/            # CSS stylesheets and JavaScript files
+TechQuiz
+    ├── api
+    │   ├── admin.py
+    │   ├── apps.py
+    │   ├── models.py
+    │   ├── tests.py
+    │   ├── urls.py
+    │   └── views.py
+    ├── google_auth_setup.py
+    ├── instructor
+    │   ├── admin.py
+    │   ├── apps.py
+    │   ├── forms.py
+    │   ├── __init__.py
+    │   ├── models.py
+    │   ├── templates
+    │   │   └── instructor
+    │   │       └── dashboard.html
+    │   ├── tests.py
+    │   ├── urls.py
+    │   └── views.py
+    ├── keys.json #keys given by Google Cloud Console to connct to the Google Sheets
+    ├── manage.py
+    ├── registration_n_login
+    │   ├── admin.py
+    │   ├── apps.py
+    │   ├── forms.py
+    │   ├── models.py
+    │   ├── static
+    │   │   └── registration_n_login
+    │   │       └── images
+    │   │           └── tic_logo.png
+    │   ├── templates
+    │   │   └── registration_n_login
+    │   │       ├── eliminated.html
+    │   │       ├── leaderboard.html
+    │   │       ├── login.html
+    │   │       ├── register.html
+    │   │       ├── round_3.html
+    │   │       ├── success.html
+    │   │       ├── verify_otp.html
+    │   │       └── waiting_room.html
+    │   ├── tests.py
+    │   ├── urls.py
+    │   └── views.py
+    ├── requirements.txt
+    ├── round_1
+    │   ├── admin.py
+    │   ├── apps.py
+    │   ├── models.py
+    │   ├── __pycache__
+    │   ├── templates
+    │   │   └── round_1
+    │   │       └── round_1.html
+    │   ├── tests.py
+    │   ├── urls.py
+    │   ├── utils.py
+    │   └── views.py
+    ├── round_2
+    │   ├── admin.py
+    │   ├── apps.py
+    │   ├── models.py
+    │   ├── templates
+    │   │   └── round_2
+    │   │       └── round_2.html
+    │   ├── tests.py
+    │   ├── urls.py
+    │   ├── utils.py
+    │   └── views.py
+    ├── service_account.json # a file given by Google Cloud Cosole to authenticate the host user.
+    └── TechQuiz
+        ├── asgi.py
+        ├── settings.py
+        ├── urls.py
+        └── wsgi.py
