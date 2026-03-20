@@ -15,7 +15,7 @@
 
 ## 📖 Overview
 
-TIC Matrix is a robust, full-stack web application designed for The Innovators and Creativa Matrix Club to host competitive quiz events. Engineered with a focus on seamless data flow, the platform integrates a live leaderboard, a high-precision buzzer system, and a dynamic headless CMS via Google Sheets. It demonstrates advanced capabilities in backend routing, real-time state synchronization, and database management, ensuring a highly responsive and fair competitive environment.
+TechQuiz is a robust, full-stack web application designed for The Innovators and Creativa Matrix Club to host competitive quiz events. Engineered with a focus on seamless data flow, the platform integrates a live leaderboard, a high-precision buzzer system, and a dynamic headless CMS via Google Sheets. It demonstrates advanced capabilities in backend routing, real-time state synchronization, and database management, ensuring a highly responsive and fair competitive environment.
 
 ## ✨ Features
 
