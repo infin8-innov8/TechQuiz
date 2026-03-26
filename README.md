@@ -25,8 +25,6 @@ TechQuiz is a robust, full-stack web application designed for The Innovators and
 - 🔒 **Secure Authentication**: Streamlined user registration, session management, and state tracking.
 - 🚀 **End-to-End Deployment**: Fully deployed and routed on PythonAnywhere for immediate access.
 
-## 🖥️ Screenshots
-
 ## 🛠️ Tech Stack
 
 **Backend & Data Source:**
